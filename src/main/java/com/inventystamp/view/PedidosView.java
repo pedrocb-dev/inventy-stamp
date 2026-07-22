@@ -1,13 +1,13 @@
 package com.inventystamp.view;
 
 import com.inventystamp.dao.PedidoDAO;
-import com.inventystamp.dao.TarefaDAO;
 import com.inventystamp.model.*;
+import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -15,15 +15,13 @@ import java.util.List;
 
 public class PedidosView {
 
-    private Usuario usuario;
-    private PedidoDAO pedidoDAO = new PedidoDAO();
+    private final PedidoDAO pedidoDAO = new PedidoDAO();
     private VBox root;
-    private VBox listaPedidos;
+    private GridPane gridPedidos;
     private String filtroAtual = "TODOS";
-    private DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public PedidosView(Usuario usuario) {
-        this.usuario = usuario;
+    public PedidosView() {
         construir();
     }
 
@@ -32,9 +30,8 @@ public class PedidosView {
         root.setPadding(new Insets(20));
 
         Label titulo = new Label("📋 Pedidos");
-        titulo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        titulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        // Filtros
         HBox filtros = new HBox(10);
         filtros.setAlignment(Pos.CENTER_LEFT);
 
@@ -48,8 +45,18 @@ public class PedidosView {
 
         filtros.getChildren().addAll(new Label("Filtrar:"), btnTodos, btnBordado, btnDemais);
 
-        listaPedidos = new VBox(10);
-        ScrollPane scroll = new ScrollPane(listaPedidos);
+        gridPedidos = new GridPane();
+        gridPedidos.setHgap(12);
+        gridPedidos.setVgap(12);
+        gridPedidos.setPadding(new Insets(4));
+
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        gridPedidos.getColumnConstraints().addAll(col1, col2);
+
+        ScrollPane scroll = new ScrollPane(gridPedidos);
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent;");
 
@@ -60,127 +67,134 @@ public class PedidosView {
     }
 
     private void carregarPedidos() {
-        listaPedidos.getChildren().clear();
-        List<Pedido> pedidos = pedidoDAO.listarTodos();
+        gridPedidos.getChildren().clear();
 
-        pedidos.stream()
+        List<Pedido> pedidos = pedidoDAO.listarTodos().stream()
+                .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
                 .filter(p -> {
                     if (filtroAtual.equals("BORDADO")) return p.getTipoPersonalizacao() == TipoPersonalizacao.BORDADO;
                     if (filtroAtual.equals("DEMAIS")) return p.getTipoPersonalizacao() != TipoPersonalizacao.BORDADO;
                     return true;
                 })
                 .sorted((a, b) -> a.getDataEntrega().compareTo(b.getDataEntrega()))
-                .forEach(p -> listaPedidos.getChildren().add(criarCardPedido(p)));
+                .toList();
 
-        if (listaPedidos.getChildren().isEmpty()) {
+        if (pedidos.isEmpty()) {
             Label vazio = new Label("Nenhum pedido encontrado.");
-            vazio.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 13px;");
-            listaPedidos.getChildren().add(vazio);
+            vazio.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 14px;");
+            gridPedidos.add(vazio, 0, 0, 2, 1);
+            return;
+        }
+
+        for (int i = 0; i < pedidos.size(); i++) {
+            VBox card = criarCardPedido(pedidos.get(i));
+            gridPedidos.add(card, i % 2, i / 2);
         }
     }
 
     private VBox criarCardPedido(Pedido p) {
-        VBox card = new VBox(8);
-        card.setPadding(new Insets(12));
+        VBox card = new VBox();
+        card.setPadding(new Insets(14));
+        card.setMaxWidth(Double.MAX_VALUE);
+        card.setMaxHeight(Double.MAX_VALUE);
         card.setStyle(
                 "-fx-background-color: white; -fx-background-radius: 8; " +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 6, 0, 0, 2);"
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);"
         );
 
-        // Cor da aba por prazo
-        String corAba = getCorPrazo(p.getDataEntrega());
-        HBox aba = new HBox();
-        aba.setPrefHeight(6);
-        aba.setStyle("-fx-background-color: " + corAba + "; -fx-background-radius: 4;");
+        // Barra colorida por prazo no topo
+        HBox barra = new HBox();
+        barra.setPrefHeight(6);
+        barra.setMaxWidth(Double.MAX_VALUE);
+        barra.setStyle("-fx-background-color: " + getCorPrazo(p.getDataEntrega()) + "; -fx-background-radius: 4;");
 
-        // Cabeçalho
-        HBox cabecalho = new HBox(10);
-        cabecalho.setAlignment(Pos.CENTER_LEFT);
+        // Nome + código
+        String codigo = extrairCodigo(p.getClienteTelefone());
+        Label lblNome = new Label(p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo));
+        lblNome.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        lblNome.setWrapText(true);
 
-        Label nomeCliente = new Label(p.getClienteNome());
-        nomeCliente.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-
-        Label tipo = new Label(p.getTipoPersonalizacao().name());
-        tipo.setStyle(
+        // Tipo de personalização
+        Label lblTipo = new Label(p.getTipoPersonalizacao().name());
+        lblTipo.setStyle(
                 "-fx-background-color: #ecf0f1; -fx-padding: 2 8 2 8; " +
-                        "-fx-background-radius: 10; -fx-font-size: 11px; -fx-text-fill: #7f8c8d;"
+                        "-fx-background-radius: 10; -fx-font-size: 13px; -fx-text-fill: #7f8c8d;"
         );
 
-        Label dataEntrega = new Label("Entrega: " + p.getDataEntrega().format(fmt));
-        dataEntrega.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        cabecalho.getChildren().addAll(nomeCliente, tipo, spacer, dataEntrega);
-
-        // Situação
-        Label situacao = new Label("● " + p.getSituacao().name());
-        situacao.setStyle("-fx-font-size: 12px; -fx-text-fill: " +
-                (p.getSituacao() == SituacaoPedido.PRONTO ? "#27ae60" : "#e67e22") + ";");
-
-        // Prazo em dias
-        long diasParaEntrega = java.time.temporal.ChronoUnit.DAYS.between(
+        // Data de entrega + prazo
+        long dias = java.time.temporal.ChronoUnit.DAYS.between(
                 p.getDataConfirmacao(), p.getDataEntrega());
-        Label lblPrazo = new Label("⏱ Prazo: " + diasParaEntrega + " dia(s)");
-        lblPrazo.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
+        Label lblEntrega = new Label("📅 Entrega: " + p.getDataEntrega().format(fmt) + "  ⏱ " + dias + " dia(s)");
+        lblEntrega.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+        lblEntrega.setWrapText(true);
 
-        // Valor e Resta
-        HBox infoValor = new HBox(15);
+        // Valor
+        VBox infoValor = new VBox(2);
         if (p.getValor() != null) {
             Label lblValor = new Label("💰 Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
-            lblValor.setStyle("-fx-font-size: 12px; -fx-text-fill: #2c3e50;");
+            lblValor.setStyle("-fx-font-size: 14px; -fx-text-fill: #2c3e50;");
             infoValor.getChildren().add(lblValor);
         }
         if (p.getResta() != null) {
             Label lblResta = new Label("⚠ Resta: R$ " + p.getResta().setScale(2, java.math.RoundingMode.HALF_UP));
-            lblResta.setStyle("-fx-font-size: 12px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            lblResta.setStyle("-fx-font-size: 14px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
             infoValor.getChildren().add(lblResta);
         }
 
-        // Anotação
-        Label anotacao = new Label(p.getAnotacao() != null ? p.getAnotacao() : "");
-        anotacao.setWrapText(true);
-        anotacao.setStyle("-fx-font-size: 12px; -fx-text-fill: #555;");
+        // Status de pagamento
+        Label lblPagamento = new Label("💳 " + p.getStatusPagamento().name());
+        lblPagamento.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
 
-        // Tarefas do pedido
-        TarefaDAO tarefaDAO = new TarefaDAO();
-        List<Tarefa> tarefas = tarefaDAO.listarPorPedido(p.getId());
-        VBox tarefasBox = new VBox(4);
-        if (!tarefas.isEmpty()) {
-            Label lblTarefas = new Label("Tarefas:");
-            lblTarefas.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-            tarefasBox.getChildren().add(lblTarefas);
-            for (Tarefa t : tarefas) {
-                CheckBox cb = new CheckBox(t.getDescricao());
-                cb.setSelected(t.isConcluida());
-                cb.setStyle("-fx-font-size: 12px;");
-                cb.setOnAction(e -> {
-                    t.setConcluida(cb.isSelected());
-                    tarefaDAO.atualizar(t);
-                });
-                tarefasBox.getChildren().add(cb);
-            }
-        }
+        // Anotação completa
+        Label lblAnotacao = new Label(p.getAnotacao() != null ? p.getAnotacao() : "");
+        lblAnotacao.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
+        lblAnotacao.setWrapText(true);
 
-        // Botões editar/remover
+        // Botões na parte inferior
         HBox acoes = new HBox(8);
         acoes.setAlignment(Pos.CENTER_RIGHT);
+
+        Button btnConcluir = new Button("✅ Concluir");
+        btnConcluir.setStyle(
+                "-fx-background-color: #27ae60; -fx-text-fill: white; " +
+                        "-fx-background-radius: 5; -fx-font-size: 13px;"
+        );
 
         Button btnEditar = new Button("✏ Editar");
         btnEditar.setStyle(
                 "-fx-background-color: #3498db; -fx-text-fill: white; " +
-                        "-fx-background-radius: 5; -fx-font-size: 11px;"
+                        "-fx-background-radius: 5; -fx-font-size: 13px;"
         );
-        btnEditar.setOnAction(e -> abrirEdicao(p));
 
         Button btnRemover = new Button("🗑 Remover");
         btnRemover.setStyle(
                 "-fx-background-color: #e74c3c; -fx-text-fill: white; " +
-                        "-fx-background-radius: 5; -fx-font-size: 11px;"
+                        "-fx-background-radius: 5; -fx-font-size: 13px;"
         );
+
+        btnConcluir.setOnAction(e -> {
+            p.setSituacao(SituacaoPedido.PRONTO);
+            pedidoDAO.atualizar(p);
+
+            card.setStyle(
+                    "-fx-background-color: #d5f5e3; -fx-background-radius: 8; " +
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);"
+            );
+            lblNome.setText("✅ " + lblNome.getText());
+
+            FadeTransition fade = new FadeTransition(Duration.millis(1500), card);
+            fade.setFromValue(1.0);
+            fade.setToValue(0.0);
+            fade.setDelay(Duration.millis(800));
+            fade.setOnFinished(ev -> carregarPedidos());
+            fade.play();
+        });
+
+        btnEditar.setOnAction(e -> abrirEdicao(p));
+
         btnRemover.setOnAction(e -> {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Remover pedido de " + p.getClienteNome() + "?");
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                    "Remover pedido de " + p.getClienteNome() + "?");
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.OK) {
                     pedidoDAO.deletar(p.getId());
@@ -189,8 +203,13 @@ public class PedidosView {
             });
         });
 
-        acoes.getChildren().addAll(btnEditar, btnRemover);
-        card.getChildren().addAll(aba, cabecalho, situacao, lblPrazo, infoValor, anotacao, tarefasBox, acoes);
+        acoes.getChildren().addAll(btnConcluir, btnEditar, btnRemover);
+
+        VBox topo = new VBox(10, barra, lblNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblAnotacao);
+        VBox.setVgrow(lblAnotacao, Priority.ALWAYS);
+
+        card.getChildren().addAll(topo, acoes);
+        VBox.setVgrow(topo, Priority.ALWAYS);
         return card;
     }
 
@@ -212,11 +231,22 @@ public class PedidosView {
         cbPagamento.getItems().addAll(StatusPagamento.values());
         cbPagamento.setValue(p.getStatusPagamento());
 
-        ComboBox<SituacaoPedido> cbSituacao = new ComboBox<>();
-        cbSituacao.getItems().addAll(SituacaoPedido.values());
-        cbSituacao.setValue(p.getSituacao());
-
         TextField tfValor = new TextField(p.getValor() != null ? p.getValor().toString() : "");
+
+        TextField tfResta = new TextField(p.getResta() != null ? p.getResta().toString() : "");
+        tfResta.setVisible(p.getStatusPagamento() == StatusPagamento.PARCIAL);
+        tfResta.setManaged(p.getStatusPagamento() == StatusPagamento.PARCIAL);
+        Label lblResta = new Label("Resta (R$)");
+        lblResta.setVisible(p.getStatusPagamento() == StatusPagamento.PARCIAL);
+        lblResta.setManaged(p.getStatusPagamento() == StatusPagamento.PARCIAL);
+
+        cbPagamento.setOnAction(e -> {
+            boolean isParcial = cbPagamento.getValue() == StatusPagamento.PARCIAL;
+            tfResta.setVisible(isParcial);
+            tfResta.setManaged(isParcial);
+            lblResta.setVisible(isParcial);
+            lblResta.setManaged(isParcial);
+        });
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -230,7 +260,7 @@ public class PedidosView {
         grid.add(new Label("Entrega:"), 0, 4); grid.add(dpEntrega, 1, 4);
         grid.add(new Label("Valor:"), 0, 5); grid.add(tfValor, 1, 5);
         grid.add(new Label("Pagamento:"), 0, 6); grid.add(cbPagamento, 1, 6);
-        grid.add(new Label("Situação:"), 0, 7); grid.add(cbSituacao, 1, 7);
+        grid.add(lblResta, 0, 7); grid.add(tfResta, 1, 7);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -243,8 +273,11 @@ public class PedidosView {
                 p.setTipoPersonalizacao(cbTipo.getValue());
                 p.setDataEntrega(dpEntrega.getValue());
                 p.setStatusPagamento(cbPagamento.getValue());
-                p.setSituacao(cbSituacao.getValue());
                 try { p.setValor(new java.math.BigDecimal(tfValor.getText())); } catch (Exception ex) {}
+                try {
+                    if (!tfResta.getText().isBlank())
+                        p.setResta(new java.math.BigDecimal(tfResta.getText()));
+                } catch (Exception ex) {}
                 return p;
             }
             return null;
@@ -254,6 +287,13 @@ public class PedidosView {
             pedidoDAO.atualizar(pedidoAtualizado);
             carregarPedidos();
         });
+    }
+
+    private String extrairCodigo(String telefone) {
+        if (telefone == null || telefone.isBlank()) return "";
+        String numeros = telefone.replaceAll("[^0-9]", "");
+        if (numeros.length() < 4) return "";
+        return numeros.substring(numeros.length() - 4);
     }
 
     private String getCorPrazo(LocalDate dataEntrega) {

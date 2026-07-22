@@ -14,13 +14,11 @@ import java.time.LocalDate;
 
 public class AtendimentoView {
 
-    private Usuario usuario;
     private PedidoDAO pedidoDAO = new PedidoDAO();
     private TarefaDAO tarefaDAO = new TarefaDAO();
     private VBox root;
 
-    public AtendimentoView(Usuario usuario) {
-        this.usuario = usuario;
+    public AtendimentoView() {
         construir();
     }
 
