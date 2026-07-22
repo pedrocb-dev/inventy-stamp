@@ -1,5 +1,6 @@
 package com.inventystamp.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Demanda {
@@ -9,6 +10,9 @@ public class Demanda {
     private Perfil destinatario;
     private boolean concluida;
     private LocalDateTime criadoEm;
+    private LocalDate prazoData;
+    private String prazoHora;
+    private int numeroDia;
 
     public Demanda() {}
 
@@ -29,4 +33,13 @@ public class Demanda {
 
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
+
+    public LocalDate getPrazoData() { return prazoData; }
+    public void setPrazoData(LocalDate prazoData) { this.prazoData = prazoData; }
+
+    public String getPrazoHora() { return prazoHora; }
+    public void setPrazoHora(String prazoHora) { this.prazoHora = prazoHora; }
+
+    public int getNumeroDia() { return numeroDia; }
+    public void setNumeroDia(int numeroDia) { this.numeroDia = numeroDia; }
 }
