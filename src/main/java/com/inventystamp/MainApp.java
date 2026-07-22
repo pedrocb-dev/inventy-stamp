@@ -44,6 +44,13 @@ public class MainApp extends Application {
 
         Scene scene = new Scene(root, 420, 380);
         stage.setTitle("Inventy Stamp");
+        try {
+            stage.getIcons().add(new javafx.scene.image.Image(
+                    MainApp.class.getResourceAsStream("/icon.png")
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         stage.setScene(scene);
         stage.show();
     }
