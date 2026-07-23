@@ -15,6 +15,9 @@ import java.util.List;
 import com.inventystamp.dao.EstatisticaDAO;
 import com.inventystamp.model.EstatisticasMes;
 import java.math.BigDecimal;
+import javax.print.*;
+import javax.print.attribute.*;
+import javax.print.attribute.standard.*;
 
 public class PedidosView {
 
@@ -247,6 +250,7 @@ public class PedidosView {
         btnConcluir.setOnAction(e -> {
             p.setSituacao(SituacaoPedido.PRONTO);
             pedidoDAO.atualizar(p);
+            imprimirEtiqueta(p);
 
             // Registra estatísticas
             if (p.getValor() != null) {
@@ -466,6 +470,54 @@ public class PedidosView {
                         "-fx-background-radius: 5; -fx-font-size: 12px;"
         );
         return btn;
+    }
+
+    private void imprimirEtiqueta(Pedido p) {
+        String codigo = extrairCodigo(p.getClienteTelefone());
+        String nomeCompleto = p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("INVENTY STAMP\n");
+        sb.append("--------------\n");
+        sb.append("Cliente: ").append(nomeCompleto).append("\n");
+        sb.append("Prazo: ").append(p.getDataEntrega().format(fmt)).append("\n");
+        sb.append("Tipo: ").append(p.getTipoPersonalizacao().name()).append("\n");
+        sb.append("Pagamento: ").append(p.getStatusPagamento().name()).append("\n");
+        if (p.getValor() != null) {
+            sb.append("Valor: R$ ").append(p.getValor().setScale(2, java.math.RoundingMode.HALF_UP)).append("\n");
+        }
+        if (p.getResta() != null && p.getStatusPagamento() == StatusPagamento.PARCIAL) {
+            sb.append("Resta: R$ ").append(p.getResta().setScale(2, java.math.RoundingMode.HALF_UP)).append("\n");
+        }
+        sb.append("--------------\n");
+
+        try {
+            byte[] bytes = sb.toString().getBytes("UTF-8");
+            DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+            PrintService[] services = PrintServiceLookup.lookupPrintServices(flavor, null);
+
+            if (services.length == 0) {
+                mostrarAlerta("Nenhuma impressora encontrada.");
+                return;
+            }
+
+            PrintService servico = ServiceUI.printDialog(null, 200, 200, services, services[0], flavor, null);
+
+            if (servico != null) {
+                DocPrintJob job = servico.createPrintJob();
+                Doc doc = new SimpleDoc(bytes, flavor, null);
+                job.print(doc, null);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro ao imprimir: " + e.getMessage());
+        }
+    }
+
+    private void mostrarAlerta(String mensagem) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, mensagem);
+        alert.showAndWait();
     }
 
     public VBox getView() {
