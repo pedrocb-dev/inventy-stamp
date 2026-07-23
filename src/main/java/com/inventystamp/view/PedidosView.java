@@ -8,11 +8,13 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
-
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import com.inventystamp.dao.EstatisticaDAO;
+import com.inventystamp.model.EstatisticasMes;
+import java.math.BigDecimal;
 
 public class PedidosView {
 
@@ -245,6 +247,25 @@ public class PedidosView {
         btnConcluir.setOnAction(e -> {
             p.setSituacao(SituacaoPedido.PRONTO);
             pedidoDAO.atualizar(p);
+
+            // Registra estatísticas
+            if (p.getValor() != null) {
+                EstatisticaDAO estatisticaDAO = new EstatisticaDAO();
+                EstatisticasMes est = new EstatisticasMes();
+                est.setAno(java.time.LocalDate.now().getYear());
+                est.setMes(java.time.LocalDate.now().getMonthValue());
+                est.setLucroBruto(p.getValor());
+
+                if (p.getTipoPersonalizacao() == TipoPersonalizacao.BORDADO) {
+                    est.setLucroBordado(p.getValor());
+                    est.setLucroOutros(BigDecimal.ZERO);
+                } else {
+                    est.setLucroBordado(BigDecimal.ZERO);
+                    est.setLucroOutros(p.getValor());
+                }
+
+                estatisticaDAO.salvarOuAtualizar(est);
+            }
 
             card.setStyle(
                     "-fx-background-color: #d5f5e3; -fx-background-radius: 8; " +

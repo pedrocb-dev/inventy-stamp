@@ -11,6 +11,8 @@ import javafx.stage.Stage;
 import com.inventystamp.view.PedidosView;
 import com.inventystamp.view.AtendimentoView;
 import com.inventystamp.view.DemandasView;
+import com.inventystamp.view.EstatisticasView;
+import javafx.scene.control.*;
 
 public class MainApp extends Application {
 
@@ -29,12 +31,39 @@ public class MainApp extends Application {
         Button btnAtender = criarBotao("🎧 Atender");
         Button btnPedidos = criarBotao("📋 Ver Pedidos");
         Button btnDemandar = criarBotao("📢 Demandar");
+        Button btnEstatisticas = criarBotao("📊 Estatísticas");
 
         btnAtender.setOnAction(e -> mostrarTela(stage, "atendimento"));
         btnPedidos.setOnAction(e -> mostrarTela(stage, "pedidos"));
         btnDemandar.setOnAction(e -> mostrarTela(stage, "demandas"));
+        btnEstatisticas.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Acesso Restrito");
+            dialog.setHeaderText("Digite a senha para acessar Estatísticas:");
+            dialog.setContentText("Senha:");
 
-        VBox botoes = new VBox(12, btnAtender, btnPedidos, btnDemandar);
+            // Esconde o texto digitado
+            PasswordField pf = new PasswordField();
+            dialog.getEditor().setVisible(false);
+            dialog.getEditor().setManaged(false);
+            dialog.getDialogPane().setContent(pf);
+            pf.requestFocus();
+
+            dialog.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(
+                    javafx.event.ActionEvent.ACTION, ev -> {
+                        if (!pf.getText().equals("***REMOVIDO***")) {
+                            ev.consume();
+                            pf.clear();
+                            pf.setPromptText("Senha incorreta!");
+                            pf.setStyle("-fx-border-color: #e74c3c;");
+                        }
+                    }
+            );
+
+            dialog.showAndWait().ifPresent(ignored -> mostrarTela(stage, "estatisticas"));
+        });
+
+        VBox botoes = new VBox(12, btnAtender, btnPedidos, btnDemandar, btnEstatisticas);
         botoes.setAlignment(Pos.CENTER);
 
         VBox root = new VBox(20, titulo, subtitulo, botoes);
@@ -42,15 +71,8 @@ public class MainApp extends Application {
         root.setPadding(new Insets(40));
         root.setStyle("-fx-background-color: #f4f6f7;");
 
-        Scene scene = new Scene(root, 420, 380);
+        Scene scene = new Scene(root, 420, 460);
         stage.setTitle("Inventy Stamp");
-        try {
-            stage.getIcons().add(new javafx.scene.image.Image(
-                    MainApp.class.getResourceAsStream("/icon.png")
-            ));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         stage.setScene(scene);
         stage.show();
     }
@@ -67,13 +89,38 @@ public class MainApp extends Application {
         menu.getChildren().addAll(
                 criarBotaoMenu("🎧 Atender", () -> conteudo.getChildren().setAll(new AtendimentoView().getView())),
                 criarBotaoMenu("📋 Ver Pedidos", () -> conteudo.getChildren().setAll(new PedidosView().getView())),
-                criarBotaoMenu("📢 Demandar", () -> conteudo.getChildren().setAll(new DemandasView().getView()))
+                criarBotaoMenu("📢 Demandar", () -> conteudo.getChildren().setAll(new DemandasView().getView())),
+                criarBotaoMenu("📊 Estatísticas", () -> {
+                    TextInputDialog dialog = new TextInputDialog();
+                    dialog.setTitle("Acesso Restrito");
+                    dialog.setHeaderText("Digite a senha para acessar Estatísticas:");
+
+                    PasswordField pf = new PasswordField();
+                    dialog.getEditor().setVisible(false);
+                    dialog.getEditor().setManaged(false);
+                    dialog.getDialogPane().setContent(pf);
+                    pf.requestFocus();
+
+                    dialog.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(
+                            javafx.event.ActionEvent.ACTION, ev -> {
+                                if (!pf.getText().equals("***REMOVIDO***")) {
+                                    ev.consume();
+                                    pf.clear();
+                                    pf.setPromptText("Senha incorreta!");
+                                    pf.setStyle("-fx-border-color: #e74c3c;");
+                                }
+                            }
+                    );
+
+                    dialog.showAndWait().ifPresent(ignored -> conteudo.getChildren().setAll(new EstatisticasView().getView()));
+                })
         );
 
         switch (tela) {
             case "atendimento" -> conteudo.getChildren().setAll(new AtendimentoView().getView());
             case "pedidos" -> conteudo.getChildren().setAll(new PedidosView().getView());
             case "demandas" -> conteudo.getChildren().setAll(new DemandasView().getView());
+            case "estatisticas" -> conteudo.getChildren().setAll(new EstatisticasView().getView());
         }
 
         Button btnVoltar = new Button("↩ Voltar");
