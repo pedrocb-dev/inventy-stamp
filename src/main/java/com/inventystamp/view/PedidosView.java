@@ -9,6 +9,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -16,8 +17,8 @@ import java.util.List;
 public class PedidosView {
 
     private final PedidoDAO pedidoDAO = new PedidoDAO();
-    private VBox root;
     private GridPane gridPedidos;
+    private VBox root;
     private String filtroAtual = "TODOS";
     private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -28,6 +29,7 @@ public class PedidosView {
     private void construir() {
         root = new VBox(15);
         root.setPadding(new Insets(20));
+        root.setStyle("-fx-background-color: #e8eaed;");
 
         Label titulo = new Label("📋 Pedidos");
         titulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
@@ -52,9 +54,12 @@ public class PedidosView {
 
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(50);
+        col1.setFillWidth(true);
         ColumnConstraints col2 = new ColumnConstraints();
         col2.setPercentWidth(50);
+        col2.setFillWidth(true);
         gridPedidos.getColumnConstraints().addAll(col1, col2);
+        gridPedidos.getRowConstraints().clear();
 
         ScrollPane scroll = new ScrollPane(gridPedidos);
         scroll.setFitToWidth(true);
@@ -68,6 +73,7 @@ public class PedidosView {
 
     private void carregarPedidos() {
         gridPedidos.getChildren().clear();
+        gridPedidos.getRowConstraints().clear();
 
         List<Pedido> pedidos = pedidoDAO.listarTodos().stream()
                 .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
@@ -88,7 +94,17 @@ public class PedidosView {
 
         for (int i = 0; i < pedidos.size(); i++) {
             VBox card = criarCardPedido(pedidos.get(i));
+            card.setMinHeight(220);
+            GridPane.setValignment(card, javafx.geometry.VPos.TOP);
             gridPedidos.add(card, i % 2, i / 2);
+        }
+
+// Garante que cada linha tenha altura independente
+        for (int row = 0; row <= pedidos.size() / 2; row++) {
+            RowConstraints rc = new RowConstraints();
+            rc.setVgrow(Priority.NEVER);
+            rc.setFillHeight(false);
+            gridPedidos.getRowConstraints().add(rc);
         }
     }
 
@@ -150,7 +166,12 @@ public class PedidosView {
         lblAnotacao.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
         lblAnotacao.setWrapText(true);
 
-        // Botões na parte inferior
+        // Layout
+        VBox layoutBox = new VBox(8);
+        layoutBox.setVisible(false);
+        layoutBox.setManaged(false);
+
+        // Botões
         HBox acoes = new HBox(8);
         acoes.setAlignment(Pos.CENTER_RIGHT);
 
@@ -171,6 +192,55 @@ public class PedidosView {
                 "-fx-background-color: #e74c3c; -fx-text-fill: white; " +
                         "-fx-background-radius: 5; -fx-font-size: 13px;"
         );
+
+        // Verifica se tem layout
+        if (p.getLayoutPath() != null && !p.getLayoutPath().isBlank()) {
+            File arquivoLayout = new File(p.getLayoutPath());
+            if (arquivoLayout.exists()) {
+                String nome = arquivoLayout.getName().toLowerCase();
+
+                if (nome.endsWith(".png") || nome.endsWith(".jpg") || nome.endsWith(".jpeg")) {
+                    javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView(
+                            new javafx.scene.image.Image(arquivoLayout.toURI().toString())
+                    );
+                    imgView.setFitWidth(200);
+                    imgView.setPreserveRatio(true);
+                    layoutBox.getChildren().add(imgView);
+                } else if (nome.endsWith(".pdf")) {
+                    Button btnVerPdf = new Button("📄 Ver PDF");
+                    btnVerPdf.setStyle(
+                            "-fx-background-color: #e67e22; -fx-text-fill: white; " +
+                                    "-fx-background-radius: 5; -fx-font-size: 12px;"
+                    );
+                    btnVerPdf.setOnAction(ev -> {
+                        try {
+                            java.awt.Desktop.getDesktop().open(arquivoLayout);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    });
+                    layoutBox.getChildren().add(btnVerPdf);
+                }
+
+                Button btnToggleLayout = new Button("🖼 Ver Layout");
+                btnToggleLayout.setStyle(
+                        "-fx-background-color: #8e44ad; -fx-text-fill: white; " +
+                                "-fx-background-radius: 5; -fx-font-size: 13px;"
+                );
+                btnToggleLayout.setOnAction(ev -> {
+                    boolean visivel = layoutBox.isVisible();
+                    layoutBox.setVisible(!visivel);
+                    layoutBox.setManaged(!visivel);
+                    btnToggleLayout.setText(visivel ? "🖼 Ver Layout" : "🙈 Esconder Layout");
+                });
+
+                acoes.getChildren().addAll(btnToggleLayout, btnConcluir, btnEditar, btnRemover);
+            } else {
+                acoes.getChildren().addAll(btnConcluir, btnEditar, btnRemover);
+            }
+        } else {
+            acoes.getChildren().addAll(btnConcluir, btnEditar, btnRemover);
+        }
 
         btnConcluir.setOnAction(e -> {
             p.setSituacao(SituacaoPedido.PRONTO);
@@ -203,13 +273,78 @@ public class PedidosView {
             });
         });
 
-        acoes.getChildren().addAll(btnConcluir, btnEditar, btnRemover);
+        // Coluna esquerda — informações do pedido
+        VBox colunaEsquerda = new VBox(10, lblNome, lblTipo, lblEntrega, infoValor, lblPagamento);
+        colunaEsquerda.setPrefWidth(200);
+        HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 
-        VBox topo = new VBox(10, barra, lblNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblAnotacao);
-        VBox.setVgrow(lblAnotacao, Priority.ALWAYS);
+// Coluna direita — anotações
+        VBox colunaDireita = new VBox(6);
+        colunaDireita.setPrefWidth(180);
+        colunaDireita.setMinWidth(180);
 
-        card.getChildren().addAll(topo, acoes);
+        Label lblTituloAnotacao = new Label("📝 Anotações");
+        lblTituloAnotacao.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;");
+
+        lblAnotacao.setWrapText(true);
+        lblAnotacao.setMaxWidth(180);
+
+        colunaDireita.getChildren().addAll(lblTituloAnotacao, lblAnotacao);
+
+        HBox conteudo = new HBox(14, colunaEsquerda, colunaDireita);
+        conteudo.setAlignment(Pos.TOP_LEFT);
+
+        VBox topo = new VBox(10, barra, conteudo);
         VBox.setVgrow(topo, Priority.ALWAYS);
+
+// Extensão do layout — mesma largura do card
+        VBox extensaoLayout = new VBox();
+        extensaoLayout.setVisible(false);
+        extensaoLayout.setManaged(false);
+        extensaoLayout.setMaxWidth(Double.MAX_VALUE);
+        extensaoLayout.setPrefHeight(300);
+        extensaoLayout.setMinHeight(300);
+        extensaoLayout.setPadding(new Insets(10, 0, 0, 0));
+        extensaoLayout.setStyle(
+                "-fx-border-color: #dcdde1; -fx-border-width: 1 0 0 0;"
+        );
+
+        if (p.getLayoutPath() != null && !p.getLayoutPath().isBlank()) {
+            File arquivoLayout = new File(p.getLayoutPath());
+            if (arquivoLayout.exists()) {
+                String nome = arquivoLayout.getName().toLowerCase();
+                if (nome.endsWith(".png") || nome.endsWith(".jpg") || nome.endsWith(".jpeg")) {
+                    javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView(
+                            new javafx.scene.image.Image(arquivoLayout.toURI().toString())
+                    );
+                    imgView.setPreserveRatio(true);
+                    imgView.setFitWidth(card.getWidth() > 0 ? card.getWidth() - 28 : 400);
+                    imgView.setFitHeight(280);
+                    card.widthProperty().addListener((obs, oldVal, newVal) ->
+                            imgView.setFitWidth(newVal.doubleValue() - 28));
+                    extensaoLayout.getChildren().add(imgView);
+                }
+            }
+        }
+
+// Atualiza botão toggle para controlar extensão
+        if (p.getLayoutPath() != null && !p.getLayoutPath().isBlank()) {
+            File arquivoLayout = new File(p.getLayoutPath());
+            if (arquivoLayout.exists()) {
+                for (javafx.scene.Node node : acoes.getChildren()) {
+                    if (node instanceof Button btn && btn.getText().contains("Layout")) {
+                        btn.setOnAction(ev -> {
+                            boolean visivel = extensaoLayout.isVisible();
+                            extensaoLayout.setVisible(!visivel);
+                            extensaoLayout.setManaged(!visivel);
+                            btn.setText(visivel ? "🖼 Ver Layout" : "🙈 Esconder Layout");
+                        });
+                    }
+                }
+            }
+        }
+
+        card.getChildren().addAll(topo, acoes, extensaoLayout);
         return card;
     }
 

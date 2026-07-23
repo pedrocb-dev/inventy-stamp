@@ -33,8 +33,8 @@ public class PedidoDAO {
 
     public void salvar(Pedido p) {
         String sql = "INSERT INTO pedidos (cliente_nome, cliente_telefone, anotacao, tipo_personalizacao, " +
-                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, layout_path) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -49,6 +49,7 @@ public class PedidoDAO {
             ps.setString(8, p.getStatusPagamento().name());
             ps.setString(9, p.getSituacao().name());
             ps.setBigDecimal(10, p.getResta());
+            ps.setString(11, p.getLayoutPath());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -62,7 +63,7 @@ public class PedidoDAO {
 
     public void atualizar(Pedido p) {
         String sql = "UPDATE pedidos SET cliente_nome=?, cliente_telefone=?, anotacao=?, tipo_personalizacao=?, " +
-                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=? WHERE id=?";
+                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, layout_path=? WHERE id=?";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -78,7 +79,8 @@ public class PedidoDAO {
             ps.setString(9, p.getSituacao().name());
             ps.setString(10, p.getFotoConclusao());
             ps.setBigDecimal(11, p.getResta());
-            ps.setInt(12, p.getId());
+            ps.setString(12, p.getLayoutPath());
+            ps.setInt(13, p.getId());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -114,6 +116,7 @@ public class PedidoDAO {
         p.setSituacao(SituacaoPedido.valueOf(rs.getString("situacao")));
         p.setFotoConclusao(rs.getString("foto_conclusao"));
         p.setResta(rs.getBigDecimal("resta"));
+        p.setLayoutPath(rs.getString("layout_path"));
         p.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
         return p;
     }
