@@ -578,7 +578,10 @@ public class PedidosView {
     }
 
     private void mostrarAlerta(String mensagem) {
-        Alert alert = new Alert(Alert.AlertType.ERROR, mensagem);
+        Alert.AlertType tipo = mensagem.startsWith("✅")
+                ? Alert.AlertType.INFORMATION
+                : Alert.AlertType.ERROR;
+        Alert alert = new Alert(tipo, mensagem);
         alert.showAndWait();
     }
 
