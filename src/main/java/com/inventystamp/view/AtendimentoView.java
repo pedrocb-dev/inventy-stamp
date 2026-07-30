@@ -128,9 +128,20 @@ public class AtendimentoView {
             campoResta.setManaged(isParcial);
         });
 
+        // NF
+        ComboBox<String> cbNF = new ComboBox<>();
+        cbNF.getItems().addAll("Não precisa de NF", "Precisa de NF");
+        cbNF.setValue("Não precisa de NF");
+        cbNF.setMaxWidth(Double.MAX_VALUE);
+        cbNF.setStyle("-fx-font-size: 14px;");
+
         HBox linha4 = new HBox(12,
                 criarCampoFixo("💰 Valor (R$)", tfValor, 160),
                 campoResta
+        );
+
+        HBox linha5 = new HBox(12,
+                criarCampo("🧾 Nota Fiscal", cbNF)
         );
 
         // Feedback e botão
@@ -153,7 +164,7 @@ public class AtendimentoView {
                         "-fx-background-radius: 8; -fx-font-size: 15px; -fx-font-weight: bold;"
         ));
 
-        formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4);
+        formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4, linha5);
 
         // Card de upload do layout
         VBox uploadCard = new VBox(14);
@@ -279,6 +290,7 @@ public class AtendimentoView {
             p.setDataEntrega(dpEntrega.getValue());
             p.setStatusPagamento(cbPagamento.getValue());
             p.setSituacao(SituacaoPedido.PREPARANDO);
+            p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
 
             try {
                 if (!tfValor.getText().isBlank())

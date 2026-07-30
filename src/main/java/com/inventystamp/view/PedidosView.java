@@ -166,6 +166,10 @@ public class PedidosView {
         Label lblPagamento = new Label("💳 " + p.getStatusPagamento().name());
         lblPagamento.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
 
+        // NF
+        Label lblNF = new Label(p.isPrecisaNf() ? "🧾 Precisa de NF" : "");
+        lblNF.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
+
         // Anotação completa
         Label lblAnotacao = new Label(p.getAnotacao() != null ? p.getAnotacao() : "");
         lblAnotacao.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
@@ -197,6 +201,13 @@ public class PedidosView {
                 "-fx-background-color: #e74c3c; -fx-text-fill: white; " +
                         "-fx-background-radius: 5; -fx-font-size: 13px;"
         );
+
+        Button btnImprimir = new Button("🖨 Imprimir");
+        btnImprimir.setStyle(
+                "-fx-background-color: #7f8c8d; -fx-text-fill: white; " +
+                        "-fx-background-radius: 5; -fx-font-size: 13px;"
+        );
+        btnImprimir.setOnAction(e -> imprimirEtiqueta(p));
 
         // Verifica se tem layout
         if (p.getLayoutPath() != null && !p.getLayoutPath().isBlank()) {
@@ -239,18 +250,17 @@ public class PedidosView {
                     btnToggleLayout.setText(visivel ? "🖼 Ver Layout" : "🙈 Esconder Layout");
                 });
 
-                acoes.getChildren().addAll(btnToggleLayout, btnConcluir, btnEditar, btnRemover);
+                acoes.getChildren().addAll(btnImprimir, btnToggleLayout, btnConcluir, btnEditar, btnRemover);
             } else {
-                acoes.getChildren().addAll(btnConcluir, btnEditar, btnRemover);
+                acoes.getChildren().addAll(btnImprimir, btnConcluir, btnEditar, btnRemover);
             }
         } else {
-            acoes.getChildren().addAll(btnConcluir, btnEditar, btnRemover);
+            acoes.getChildren().addAll(btnImprimir, btnConcluir, btnEditar, btnRemover);
         }
 
         btnConcluir.setOnAction(e -> {
             p.setSituacao(SituacaoPedido.PRONTO);
             pedidoDAO.atualizar(p);
-            imprimirEtiqueta(p);
 
             // Registra estatísticas
             if (p.getValor() != null) {
@@ -299,7 +309,7 @@ public class PedidosView {
         });
 
         // Coluna esquerda — informações do pedido
-        VBox colunaEsquerda = new VBox(10, lblNome, lblTipo, lblEntrega, infoValor, lblPagamento);
+        VBox colunaEsquerda = new VBox(10, lblNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblNF);
         colunaEsquerda.setPrefWidth(200);
         HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 
@@ -421,6 +431,10 @@ public class PedidosView {
         grid.add(new Label("Valor:"), 0, 5); grid.add(tfValor, 1, 5);
         grid.add(new Label("Pagamento:"), 0, 6); grid.add(cbPagamento, 1, 6);
         grid.add(lblResta, 0, 7); grid.add(tfResta, 1, 7);
+        ComboBox<String> cbNF = new ComboBox<>();
+        cbNF.getItems().addAll("Não precisa de NF", "Precisa de NF");
+        cbNF.setValue(p.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
+        grid.add(new Label("🧾 Nota Fiscal:"), 0, 8); grid.add(cbNF, 1, 8);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -438,6 +452,7 @@ public class PedidosView {
                     if (!tfResta.getText().isBlank())
                         p.setResta(new java.math.BigDecimal(tfResta.getText()));
                 } catch (Exception ex) {}
+                p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
                 return p;
             }
             return null;
@@ -476,42 +491,89 @@ public class PedidosView {
         String codigo = extrairCodigo(p.getClienteTelefone());
         String nomeCompleto = p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("INVENTY STAMP\n");
-        sb.append("--------------\n");
-        sb.append("Cliente: ").append(nomeCompleto).append("\n");
-        sb.append("Prazo: ").append(p.getDataEntrega().format(fmt)).append("\n");
-        sb.append("Tipo: ").append(p.getTipoPersonalizacao().name()).append("\n");
-        sb.append("Pagamento: ").append(p.getStatusPagamento().name()).append("\n");
-        if (p.getValor() != null) {
-            sb.append("Valor: R$ ").append(p.getValor().setScale(2, java.math.RoundingMode.HALF_UP)).append("\n");
-        }
-        if (p.getResta() != null && p.getStatusPagamento() == StatusPagamento.PARCIAL) {
-            sb.append("Resta: R$ ").append(p.getResta().setScale(2, java.math.RoundingMode.HALF_UP)).append("\n");
-        }
-        sb.append("--------------\n");
+        // Monta linhas da etiqueta
+        java.util.List<String> linhas = new java.util.ArrayList<>();
+        linhas.add("INVENTY STAMP");
+        linhas.add("--------------");
+        linhas.add("Cliente: " + nomeCompleto);
+        linhas.add("Prazo: " + p.getDataEntrega().format(fmt));
+        linhas.add("Tipo: " + p.getTipoPersonalizacao().name());
+        linhas.add("Pagamento: " + p.getStatusPagamento().name());
+        if (p.getValor() != null)
+            linhas.add("Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
+        if (p.getResta() != null && p.getStatusPagamento() == StatusPagamento.PARCIAL)
+            linhas.add("Resta: R$ " + p.getResta().setScale(2, java.math.RoundingMode.HALF_UP));
+        linhas.add("--------------");
 
         try {
-            byte[] bytes = sb.toString().getBytes("UTF-8");
-            DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
-            PrintService[] services = PrintServiceLookup.lookupPrintServices(flavor, null);
+            // Cria imagem com o texto
+            int largura = 283; // 100mm a 72dpi
+            int altura = 425;  // 150mm a 72dpi
+            java.awt.image.BufferedImage imagem = new java.awt.image.BufferedImage(
+                    largura, altura, java.awt.image.BufferedImage.TYPE_INT_RGB);
 
-            if (services.length == 0) {
-                mostrarAlerta("Nenhuma impressora encontrada.");
+            java.awt.Graphics2D g = imagem.createGraphics();
+            g.setColor(java.awt.Color.WHITE);
+            g.fillRect(0, 0, largura, altura);
+            g.setColor(java.awt.Color.BLACK);
+            g.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 14));
+
+            int y = 30;
+            for (String linha : linhas) {
+                if (linha.equals("INVENTY STAMP")) {
+                    g.setFont(new java.awt.Font("Monospaced", java.awt.Font.BOLD, 16));
+                } else {
+                    g.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
+                }
+                g.drawString(linha, 10, y);
+                y += 22;
+            }
+            g.dispose();
+
+            // Imprime a imagem
+            java.awt.print.PrinterJob printerJob = java.awt.print.PrinterJob.getPrinterJob();
+
+            // Encontra impressora LABEL
+            javax.print.PrintService[] services = javax.print.PrintServiceLookup.lookupPrintServices(null, null);
+            javax.print.PrintService servico = null;
+            for (javax.print.PrintService s : services) {
+                if (s.getName().equalsIgnoreCase("LABEL")) {
+                    servico = s;
+                    break;
+                }
+            }
+
+            if (servico == null) {
+                mostrarAlerta("Impressora LABEL não encontrada!");
                 return;
             }
 
-            PrintService servico = ServiceUI.printDialog(null, 200, 200, services, services[0], flavor, null);
+            printerJob.setPrintService(servico);
 
-            if (servico != null) {
-                DocPrintJob job = servico.createPrintJob();
-                Doc doc = new SimpleDoc(bytes, flavor, null);
-                job.print(doc, null);
-            }
+            java.awt.print.PageFormat pf = printerJob.defaultPage();
+            java.awt.print.Paper paper = new java.awt.print.Paper();
+            double larguraPaper = 100 / 25.4 * 72;
+            double alturaPaper = 150 / 25.4 * 72;
+            paper.setSize(larguraPaper, alturaPaper);
+            paper.setImageableArea(0, 0, larguraPaper, alturaPaper);
+            pf.setPaper(paper);
+            pf.setOrientation(java.awt.print.PageFormat.PORTRAIT);
+
+            java.awt.image.BufferedImage imagemFinal = imagem;
+            printerJob.setPrintable((graphics, pageFormat, pageIndex) -> {
+                if (pageIndex > 0) return java.awt.print.Printable.NO_SUCH_PAGE;
+                graphics.drawImage(imagemFinal, 0, 0,
+                        (int) pageFormat.getImageableWidth(),
+                        (int) pageFormat.getImageableHeight(), null);
+                return java.awt.print.Printable.PAGE_EXISTS;
+            }, pf);
+
+            printerJob.print();
+            mostrarAlerta("✅ Enviado para impressora!");
 
         } catch (Exception e) {
             e.printStackTrace();
-            mostrarAlerta("Erro ao imprimir: " + e.getMessage());
+            mostrarAlerta("Erro: " + e.getClass().getName() + "\n" + e.getMessage());
         }
     }
 

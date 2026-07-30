@@ -19,6 +19,7 @@ public class Pedido {
     private String layoutPath;
     private java.math.BigDecimal resta;
     private LocalDateTime criadoEm;
+    private boolean precisaNf;
 
     public Pedido() {}
 
@@ -63,4 +64,7 @@ public class Pedido {
 
     public String getLayoutPath() { return layoutPath; }
     public void setLayoutPath(String layoutPath) { this.layoutPath = layoutPath; }
+
+    public boolean isPrecisaNf() { return precisaNf; }
+    public void setPrecisaNf(boolean precisaNf) { this.precisaNf = precisaNf; }
 }

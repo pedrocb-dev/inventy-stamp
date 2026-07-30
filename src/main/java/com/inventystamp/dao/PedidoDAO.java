@@ -33,8 +33,8 @@ public class PedidoDAO {
 
     public void salvar(Pedido p) {
         String sql = "INSERT INTO pedidos (cliente_nome, cliente_telefone, anotacao, tipo_personalizacao, " +
-                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, layout_path) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, layout_path, precisa_nf) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -50,6 +50,7 @@ public class PedidoDAO {
             ps.setString(9, p.getSituacao().name());
             ps.setBigDecimal(10, p.getResta());
             ps.setString(11, p.getLayoutPath());
+            ps.setBoolean(12, p.isPrecisaNf());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -63,7 +64,7 @@ public class PedidoDAO {
 
     public void atualizar(Pedido p) {
         String sql = "UPDATE pedidos SET cliente_nome=?, cliente_telefone=?, anotacao=?, tipo_personalizacao=?, " +
-                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, layout_path=? WHERE id=?";
+                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, layout_path=?, precisa_nf=? WHERE id=?";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -80,7 +81,8 @@ public class PedidoDAO {
             ps.setString(10, p.getFotoConclusao());
             ps.setBigDecimal(11, p.getResta());
             ps.setString(12, p.getLayoutPath());
-            ps.setInt(13, p.getId());
+            ps.setBoolean(13, p.isPrecisaNf());
+            ps.setInt(14, p.getId());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -117,6 +119,7 @@ public class PedidoDAO {
         p.setFotoConclusao(rs.getString("foto_conclusao"));
         p.setResta(rs.getBigDecimal("resta"));
         p.setLayoutPath(rs.getString("layout_path"));
+        p.setPrecisaNf(rs.getBoolean("precisa_nf"));
         p.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
         return p;
     }
