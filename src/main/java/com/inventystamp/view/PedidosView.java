@@ -503,6 +503,9 @@ public class PedidosView {
             linhas.add("Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
         if (p.getResta() != null && p.getStatusPagamento() == StatusPagamento.PARCIAL)
             linhas.add("Resta: R$ " + p.getResta().setScale(2, java.math.RoundingMode.HALF_UP));
+        if (p.getAnotacao() != null && !p.getAnotacao().isBlank()) {
+            linhas.add("Obs: " + p.getAnotacao());
+        }
         linhas.add("--------------");
 
         try {
