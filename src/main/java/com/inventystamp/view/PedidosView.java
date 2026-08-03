@@ -537,7 +537,10 @@ public class PedidosView {
             javax.print.PrintService[] services = javax.print.PrintServiceLookup.lookupPrintServices(null, null);
             javax.print.PrintService servico = null;
             for (javax.print.PrintService s : services) {
-                if (s.getName().equalsIgnoreCase("LABEL")) {
+                System.out.println("Impressora: " + s.getName());
+                if (s.getName().equalsIgnoreCase("LABEL em inventy-kennia") ||
+                        s.getName().equalsIgnoreCase("LABEL") ||
+                        s.getName().toLowerCase().contains("label")) {
                     servico = s;
                     break;
                 }
