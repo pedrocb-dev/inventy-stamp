@@ -503,10 +503,23 @@ public class PedidosView {
             linhas.add("Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
         if (p.getResta() != null && p.getStatusPagamento() == StatusPagamento.PARCIAL)
             linhas.add("Resta: R$ " + p.getResta().setScale(2, java.math.RoundingMode.HALF_UP));
-        if (p.getAnotacao() != null && !p.getAnotacao().isBlank()) {
-            linhas.add("Obs: " + p.getAnotacao());
-        }
         linhas.add("--------------");
+        if (p.getAnotacao() != null && !p.getAnotacao().isBlank()) {
+            linhas.add("Obs:");
+            String anotacao = p.getAnotacao()
+                    .replace("\r\n", " ")
+                    .replace("\n", " ")
+                    .replace("\r", " ")
+                    .trim();
+            int maxChars = 30;
+            while (anotacao.length() > maxChars) {
+                int corte = anotacao.lastIndexOf(" ", maxChars);
+                if (corte == -1) corte = maxChars;
+                linhas.add(anotacao.substring(0, corte).trim());
+                anotacao = anotacao.substring(corte).trim();
+            }
+            if (!anotacao.isBlank()) linhas.add(anotacao);
+        }
 
         try {
             // Cria imagem com o texto
