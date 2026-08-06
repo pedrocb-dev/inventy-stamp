@@ -86,11 +86,34 @@ public class MainApp extends Application {
         StackPane conteudo = new StackPane();
         conteudo.setStyle("-fx-background-color: #f4f6f7;");
 
+        // Referência da tela de atendimento atual, para salvar rascunho ao sair
+        final AtendimentoView[] atendimentoAtual = new AtendimentoView[1];
+
+        Runnable abrirAtendimento = () -> {
+            AtendimentoView view = new AtendimentoView();
+            atendimentoAtual[0] = view;
+            conteudo.getChildren().setAll(view.getView());
+        };
+
+        Runnable sairDoAtendimentoSeNecessario = () -> {
+            if (atendimentoAtual[0] != null) {
+                atendimentoAtual[0].salvarRascunhoAutomatico();
+                atendimentoAtual[0] = null;
+            }
+        };
+
         menu.getChildren().addAll(
-                criarBotaoMenu("🎧 Atender", () -> conteudo.getChildren().setAll(new AtendimentoView().getView())),
-                criarBotaoMenu("📋 Ver Pedidos", () -> conteudo.getChildren().setAll(new PedidosView().getView())),
-                criarBotaoMenu("📢 Demandar", () -> conteudo.getChildren().setAll(new DemandasView().getView())),
+                criarBotaoMenu("🎧 Atender", abrirAtendimento),
+                criarBotaoMenu("📋 Ver Pedidos", () -> {
+                    sairDoAtendimentoSeNecessario.run();
+                    conteudo.getChildren().setAll(new PedidosView().getView());
+                }),
+                criarBotaoMenu("📢 Demandar", () -> {
+                    sairDoAtendimentoSeNecessario.run();
+                    conteudo.getChildren().setAll(new DemandasView().getView());
+                }),
                 criarBotaoMenu("📊 Estatísticas", () -> {
+                    sairDoAtendimentoSeNecessario.run();
                     TextInputDialog dialog = new TextInputDialog();
                     dialog.setTitle("Acesso Restrito");
                     dialog.setHeaderText("Digite a senha para acessar Estatísticas:");
@@ -117,7 +140,7 @@ public class MainApp extends Application {
         );
 
         switch (tela) {
-            case "atendimento" -> conteudo.getChildren().setAll(new AtendimentoView().getView());
+            case "atendimento" -> abrirAtendimento.run();
             case "pedidos" -> conteudo.getChildren().setAll(new PedidosView().getView());
             case "demandas" -> conteudo.getChildren().setAll(new DemandasView().getView());
             case "estatisticas" -> conteudo.getChildren().setAll(new EstatisticasView().getView());
@@ -129,7 +152,10 @@ public class MainApp extends Application {
                 "-fx-background-color: #e74c3c; -fx-text-fill: white; " +
                         "-fx-background-radius: 6; -fx-font-size: 12px;"
         );
-        btnVoltar.setOnAction(e -> mostrarTelaInicial(stage));
+        btnVoltar.setOnAction(e -> {
+            sairDoAtendimentoSeNecessario.run();
+            mostrarTelaInicial(stage);
+        });
         VBox.setMargin(btnVoltar, new Insets(20, 0, 0, 0));
         menu.getChildren().add(btnVoltar);
 

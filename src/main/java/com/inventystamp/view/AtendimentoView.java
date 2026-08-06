@@ -229,19 +229,7 @@ public class AtendimentoView {
         );
 
         btnSalvarRascunho.setOnAction(e -> {
-            RascunhoPedido r = new RascunhoPedido();
-            r.setClienteNome(tfNome.getText().trim());
-            r.setClienteTelefone(tfTelefone.getText().trim());
-            r.setAnotacao(taAnotacao.getText().trim());
-            r.setTipoPersonalizacao(cbTipo.getValue() != null ? cbTipo.getValue().name() : null);
-            r.setDataConfirmacao(dpConfirmacao.getValue() != null ? dpConfirmacao.getValue().format(fmtSql) : null);
-            r.setDataEntrega(dpEntrega.getValue() != null ? dpEntrega.getValue().format(fmtSql) : null);
-            r.setValor(tfValor.getText().trim());
-            r.setStatusPagamento(cbPagamento.getValue() != null ? cbPagamento.getValue().name() : null);
-            r.setResta(tfResta.getText().trim());
-            r.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
-
-            rascunhoDAO.salvar(r);
+            rascunhoDAO.salvar(montarRascunhoAtual());
             carregarRascunhos();
 
             lblFeedback.setText("📝 Rascunho salvo!");
@@ -519,6 +507,12 @@ public class AtendimentoView {
     }
 
     private void carregarRascunhoNoFormulario(RascunhoPedido r) {
+        // Se já tem algo sendo digitado, salva como rascunho antes de sobrescrever
+        boolean temConteudoAtual = !tfNome.getText().isBlank() || !taAnotacao.getText().isBlank();
+        if (temConteudoAtual) {
+            rascunhoDAO.salvar(montarRascunhoAtual());
+        }
+
         tfNome.setText(r.getClienteNome() != null ? r.getClienteNome() : "");
         tfTelefone.setText(r.getClienteTelefone() != null ? r.getClienteTelefone() : "");
         taAnotacao.setText(r.getAnotacao() != null ? r.getAnotacao() : "");
@@ -598,6 +592,28 @@ public class AtendimentoView {
                         "-fx-border-color: #dcdde1; -fx-border-radius: 6;"
         );
         return tf;
+    }
+
+    private RascunhoPedido montarRascunhoAtual() {
+        RascunhoPedido r = new RascunhoPedido();
+        r.setClienteNome(tfNome.getText().trim());
+        r.setClienteTelefone(tfTelefone.getText().trim());
+        r.setAnotacao(taAnotacao.getText().trim());
+        r.setTipoPersonalizacao(cbTipo.getValue() != null ? cbTipo.getValue().name() : null);
+        r.setDataConfirmacao(dpConfirmacao.getValue() != null ? dpConfirmacao.getValue().format(fmtSql) : null);
+        r.setDataEntrega(dpEntrega.getValue() != null ? dpEntrega.getValue().format(fmtSql) : null);
+        r.setValor(tfValor.getText().trim());
+        r.setStatusPagamento(cbPagamento.getValue() != null ? cbPagamento.getValue().name() : null);
+        r.setResta(tfResta.getText().trim());
+        r.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
+        return r;
+    }
+
+    public void salvarRascunhoAutomatico() {
+        boolean temConteudo = !tfNome.getText().isBlank() || !taAnotacao.getText().isBlank();
+        if (temConteudo) {
+            rascunhoDAO.salvar(montarRascunhoAtual());
+        }
     }
 
     public VBox getView() {
