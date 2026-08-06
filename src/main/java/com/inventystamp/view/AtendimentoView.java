@@ -1,6 +1,7 @@
 package com.inventystamp.view;
 
 import com.inventystamp.dao.PedidoDAO;
+import com.inventystamp.dao.RascunhoDAO;
 import com.inventystamp.dao.TarefaDAO;
 import com.inventystamp.model.*;
 import javafx.geometry.Insets;
@@ -10,7 +11,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,14 +20,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class AtendimentoView {
 
     private final PedidoDAO pedidoDAO = new PedidoDAO();
     private final TarefaDAO tarefaDAO = new TarefaDAO();
+    private final RascunhoDAO rascunhoDAO = new RascunhoDAO();
     private VBox root;
     private File arquivoLayoutSelecionado = null;
     private static final String PASTA_LAYOUTS = System.getProperty("user.home") + "\\Desktop\\layouts-inventy\\";
+    private final DateTimeFormatter fmtSql = DateTimeFormatter.ISO_LOCAL_DATE;
+
+    private TextField tfNome, tfTelefone, tfValor, tfResta;
+    private TextArea taAnotacao;
+    private ComboBox<TipoPersonalizacao> cbTipo;
+    private ComboBox<StatusPagamento> cbPagamento;
+    private ComboBox<String> cbNF;
+    private DatePicker dpConfirmacao, dpEntrega;
+    private VBox campoResta;
+    private VBox listaRascunhos;
 
     public AtendimentoView() {
         construir();
@@ -41,11 +54,9 @@ public class AtendimentoView {
         Label titulo = new Label("🎧 Novo Pedido");
         titulo.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        // Container central com formulário + upload lado a lado
         HBox container = new HBox(20);
         container.setAlignment(Pos.TOP_CENTER);
 
-        // Card do formulário
         VBox formCard = new VBox(14);
         formCard.setPadding(new Insets(24));
         formCard.setPrefWidth(620);
@@ -55,17 +66,15 @@ public class AtendimentoView {
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);"
         );
 
-        // Linha 1: Cliente e Telefone
-        TextField tfNome = criarTextField("Nome do cliente", 200);
-        TextField tfTelefone = criarTextField("(11) 99999-9999", 140);
+        tfNome = criarTextField("Nome do cliente", 200);
+        tfTelefone = criarTextField("(11) 99999-9999", 140);
 
         HBox linha1 = new HBox(12,
                 criarCampo("👤 Cliente *", tfNome),
                 criarCampoFixo("📞 Telefone", tfTelefone, 160)
         );
 
-        // Anotação
-        TextArea taAnotacao = new TextArea();
+        taAnotacao = new TextArea();
         taAnotacao.setPromptText(
                 "Anotações livres...\n\n" +
                         "Sugestões:\n" +
@@ -82,14 +91,13 @@ public class AtendimentoView {
         );
         VBox campoAnotacao = criarCampo("📝 Anotação", taAnotacao);
 
-        // Linha 2: Tipo e Pagamento
-        ComboBox<TipoPersonalizacao> cbTipo = new ComboBox<>();
+        cbTipo = new ComboBox<>();
         cbTipo.getItems().addAll(TipoPersonalizacao.values());
         cbTipo.setPromptText("Selecione...");
         cbTipo.setMaxWidth(Double.MAX_VALUE);
         cbTipo.setStyle("-fx-font-size: 14px;");
 
-        ComboBox<StatusPagamento> cbPagamento = new ComboBox<>();
+        cbPagamento = new ComboBox<>();
         cbPagamento.getItems().addAll(StatusPagamento.values());
         cbPagamento.setPromptText("Selecione...");
         cbPagamento.setMaxWidth(Double.MAX_VALUE);
@@ -100,12 +108,11 @@ public class AtendimentoView {
                 criarCampo("💳 Pagamento *", cbPagamento)
         );
 
-        // Linha 3: Datas
-        DatePicker dpConfirmacao = new DatePicker(LocalDate.now());
+        dpConfirmacao = new DatePicker(LocalDate.now());
         dpConfirmacao.setMaxWidth(Double.MAX_VALUE);
         dpConfirmacao.setStyle("-fx-font-size: 14px;");
 
-        DatePicker dpEntrega = new DatePicker();
+        dpEntrega = new DatePicker();
         dpEntrega.setMaxWidth(Double.MAX_VALUE);
         dpEntrega.setStyle("-fx-font-size: 14px;");
 
@@ -114,11 +121,10 @@ public class AtendimentoView {
                 criarCampo("📅 Entrega *", dpEntrega)
         );
 
-        // Linha 4: Valor e Resta
-        TextField tfValor = criarTextField("Ex: 65.00", 120);
+        tfValor = criarTextField("Ex: 65.00", 120);
 
-        TextField tfResta = criarTextField("Valor restante", 120);
-        VBox campoResta = criarCampoFixo("⚠ Resta (R$)", tfResta, 160);
+        tfResta = criarTextField("Valor restante", 120);
+        campoResta = criarCampoFixo("⚠ Resta (R$)", tfResta, 160);
         campoResta.setVisible(false);
         campoResta.setManaged(false);
 
@@ -128,23 +134,21 @@ public class AtendimentoView {
             campoResta.setManaged(isParcial);
         });
 
-        // NF
-        ComboBox<String> cbNF = new ComboBox<>();
-        cbNF.getItems().addAll("Não precisa de NF", "Precisa de NF");
-        cbNF.setValue("Não precisa de NF");
-        cbNF.setMaxWidth(Double.MAX_VALUE);
-        cbNF.setStyle("-fx-font-size: 14px;");
-
         HBox linha4 = new HBox(12,
                 criarCampoFixo("💰 Valor (R$)", tfValor, 160),
                 campoResta
         );
 
+        cbNF = new ComboBox<>();
+        cbNF.getItems().addAll("Não precisa de NF", "Precisa de NF");
+        cbNF.setValue("Não precisa de NF");
+        cbNF.setMaxWidth(Double.MAX_VALUE);
+        cbNF.setStyle("-fx-font-size: 14px;");
+
         HBox linha5 = new HBox(12,
                 criarCampo("🧾 Nota Fiscal", cbNF)
         );
 
-        // Feedback e botão
         Label lblFeedback = new Label();
         lblFeedback.setStyle("-fx-font-size: 14px;");
 
@@ -164,9 +168,34 @@ public class AtendimentoView {
                         "-fx-background-radius: 8; -fx-font-size: 15px; -fx-font-weight: bold;"
         ));
 
-        formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4, linha5);
+        Button btnSalvarRascunho = new Button("📝 Salvar Rascunho");
+        btnSalvarRascunho.setPrefWidth(200);
+        btnSalvarRascunho.setPrefHeight(44);
+        btnSalvarRascunho.setStyle(
+                "-fx-background-color: #7f8c8d; -fx-text-fill: white; " +
+                        "-fx-background-radius: 8; -fx-font-size: 14px;"
+        );
 
-        // Card de upload do layout
+        btnSalvarRascunho.setOnAction(e -> {
+            RascunhoPedido r = new RascunhoPedido();
+            r.setClienteNome(tfNome.getText().trim());
+            r.setClienteTelefone(tfTelefone.getText().trim());
+            r.setAnotacao(taAnotacao.getText().trim());
+            r.setTipoPersonalizacao(cbTipo.getValue() != null ? cbTipo.getValue().name() : null);
+            r.setDataConfirmacao(dpConfirmacao.getValue() != null ? dpConfirmacao.getValue().format(fmtSql) : null);
+            r.setDataEntrega(dpEntrega.getValue() != null ? dpEntrega.getValue().format(fmtSql) : null);
+            r.setValor(tfValor.getText().trim());
+            r.setStatusPagamento(cbPagamento.getValue() != null ? cbPagamento.getValue().name() : null);
+            r.setResta(tfResta.getText().trim());
+            r.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
+
+            rascunhoDAO.salvar(r);
+            carregarRascunhos();
+
+            lblFeedback.setText("📝 Rascunho salvo!");
+            lblFeedback.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 14px;");
+        });
+
         VBox uploadCard = new VBox(14);
         uploadCard.setPadding(new Insets(24));
         uploadCard.setPrefWidth(280);
@@ -184,7 +213,6 @@ public class AtendimentoView {
         Label lblOpcional = new Label("(opcional)");
         lblOpcional.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
 
-        // Preview do arquivo
         ImageView preview = new ImageView();
         preview.setFitWidth(220);
         preview.setFitHeight(200);
@@ -194,7 +222,6 @@ public class AtendimentoView {
         lblArquivo.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
         lblArquivo.setWrapText(true);
 
-        // Área de drop visual
         VBox dropArea = new VBox(10);
         dropArea.setAlignment(Pos.CENTER);
         dropArea.setPrefHeight(220);
@@ -245,7 +272,6 @@ public class AtendimentoView {
                 btnLimpar.setVisible(true);
                 btnLimpar.setManaged(true);
 
-                // Mostra preview se for imagem
                 String nome = arquivo.getName().toLowerCase();
                 if (nome.endsWith(".png") || nome.endsWith(".jpg") || nome.endsWith(".jpeg")) {
                     preview.setImage(new Image(arquivo.toURI().toString()));
@@ -269,8 +295,7 @@ public class AtendimentoView {
 
         uploadCard.getChildren().addAll(lblUploadTitulo, lblOpcional, dropArea, btnSelecionar, btnLimpar);
 
-        // Botão salvar e feedback abaixo do container
-        HBox botaoBox = new HBox(btnSalvar);
+        HBox botaoBox = new HBox(10, btnSalvar, btnSalvarRascunho);
         botaoBox.setAlignment(Pos.CENTER_LEFT);
 
         btnSalvar.setOnAction(e -> {
@@ -310,7 +335,6 @@ public class AtendimentoView {
                 return;
             }
 
-            // Salva o layout se houver
             if (arquivoLayoutSelecionado != null) {
                 try {
                     File pasta = new File(PASTA_LAYOUTS);
@@ -339,23 +363,11 @@ public class AtendimentoView {
                 tarefaDAO.salvar(t);
             }
 
-            // Limpa formulário
-            tfNome.clear();
-            tfTelefone.clear();
-            taAnotacao.clear();
-            cbTipo.setValue(null);
-            dpConfirmacao.setValue(LocalDate.now());
-            dpEntrega.setValue(null);
-            tfValor.clear();
-            tfResta.clear();
-            cbPagamento.setValue(null);
-            campoResta.setVisible(false);
-            campoResta.setManaged(false);
-            arquivoLayoutSelecionado = null;
-            lblArquivo.setText("Nenhum arquivo selecionado");
-            lblArquivo.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
+            limparFormulario();
             preview.setImage(null);
             lblDropIcon.setText("📁");
+            lblArquivo.setText("Nenhum arquivo selecionado");
+            lblArquivo.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
             btnLimpar.setVisible(false);
             btnLimpar.setManaged(false);
 
@@ -365,10 +377,27 @@ public class AtendimentoView {
 
         container.getChildren().addAll(formCard, uploadCard);
 
+        formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4, linha5);
+
         VBox bottomBox = new VBox(10, botaoBox, lblFeedback);
         bottomBox.setMaxWidth(620 + 280 + 20);
 
-        VBox tudo = new VBox(20, container, bottomBox);
+        VBox rascunhosCard = new VBox(12);
+        rascunhosCard.setPadding(new Insets(20));
+        rascunhosCard.setMaxWidth(620 + 280 + 20);
+        rascunhosCard.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 10; " +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);"
+        );
+
+        Label lblRascunhosTitulo = new Label("📝 Rascunhos salvos");
+        lblRascunhosTitulo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        listaRascunhos = new VBox(8);
+
+        rascunhosCard.getChildren().addAll(lblRascunhosTitulo, listaRascunhos);
+
+        VBox tudo = new VBox(20, container, bottomBox, rascunhosCard);
         tudo.setAlignment(Pos.TOP_CENTER);
 
         ScrollPane scroll = new ScrollPane(tudo);
@@ -377,6 +406,116 @@ public class AtendimentoView {
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
         root.getChildren().addAll(titulo, scroll);
+
+        carregarRascunhos();
+    }
+
+    private void carregarRascunhos() {
+        listaRascunhos.getChildren().clear();
+        List<RascunhoPedido> rascunhos = rascunhoDAO.listarTodos();
+
+        if (rascunhos.isEmpty()) {
+            Label vazio = new Label("Nenhum rascunho salvo.");
+            vazio.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 13px;");
+            listaRascunhos.getChildren().add(vazio);
+            return;
+        }
+
+        for (RascunhoPedido r : rascunhos) {
+            listaRascunhos.getChildren().add(criarCardRascunho(r));
+        }
+    }
+
+    private HBox criarCardRascunho(RascunhoPedido r) {
+        HBox card = new HBox(10);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPadding(new Insets(10));
+        card.setStyle(
+                "-fx-background-color: #f8f9fa; -fx-background-radius: 6; " +
+                        "-fx-border-color: #dcdde1; -fx-border-radius: 6;"
+        );
+
+        String nome = (r.getClienteNome() == null || r.getClienteNome().isBlank())
+                ? "(sem nome)" : r.getClienteNome();
+
+        Label lblInfo = new Label("👤 " + nome +
+                (r.getDataEntrega() != null ? "  •  entrega: " + r.getDataEntrega() : ""));
+        lblInfo.setStyle("-fx-font-size: 13px; -fx-text-fill: #2c3e50;");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button btnCarregar = new Button("📂 Carregar");
+        btnCarregar.setStyle(
+                "-fx-background-color: #3498db; -fx-text-fill: white; " +
+                        "-fx-background-radius: 5; -fx-font-size: 12px;"
+        );
+        btnCarregar.setOnAction(e -> carregarRascunhoNoFormulario(r));
+
+        Button btnExcluir = new Button("🗑 Excluir");
+        btnExcluir.setStyle(
+                "-fx-background-color: #e74c3c; -fx-text-fill: white; " +
+                        "-fx-background-radius: 5; -fx-font-size: 12px;"
+        );
+        btnExcluir.setOnAction(e -> {
+            rascunhoDAO.deletar(r.getId());
+            carregarRascunhos();
+        });
+
+        card.getChildren().addAll(lblInfo, spacer, btnCarregar, btnExcluir);
+        return card;
+    }
+
+    private void carregarRascunhoNoFormulario(RascunhoPedido r) {
+        tfNome.setText(r.getClienteNome() != null ? r.getClienteNome() : "");
+        tfTelefone.setText(r.getClienteTelefone() != null ? r.getClienteTelefone() : "");
+        taAnotacao.setText(r.getAnotacao() != null ? r.getAnotacao() : "");
+
+        if (r.getTipoPersonalizacao() != null) {
+            try { cbTipo.setValue(TipoPersonalizacao.valueOf(r.getTipoPersonalizacao())); }
+            catch (Exception ex) { cbTipo.setValue(null); }
+        }
+
+        if (r.getStatusPagamento() != null) {
+            try {
+                cbPagamento.setValue(StatusPagamento.valueOf(r.getStatusPagamento()));
+                boolean isParcial = cbPagamento.getValue() == StatusPagamento.PARCIAL;
+                campoResta.setVisible(isParcial);
+                campoResta.setManaged(isParcial);
+            } catch (Exception ex) { cbPagamento.setValue(null); }
+        }
+
+        if (r.getDataConfirmacao() != null && !r.getDataConfirmacao().isBlank()) {
+            try { dpConfirmacao.setValue(LocalDate.parse(r.getDataConfirmacao())); }
+            catch (Exception ignored) {}
+        }
+        if (r.getDataEntrega() != null && !r.getDataEntrega().isBlank()) {
+            try { dpEntrega.setValue(LocalDate.parse(r.getDataEntrega())); }
+            catch (Exception ignored) {}
+        }
+
+        tfValor.setText(r.getValor() != null ? r.getValor() : "");
+        tfResta.setText(r.getResta() != null ? r.getResta() : "");
+        cbNF.setValue(r.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
+
+        rascunhoDAO.deletar(r.getId());
+        carregarRascunhos();
+    }
+
+    private void limparFormulario() {
+        tfNome.clear();
+        tfTelefone.clear();
+        taAnotacao.clear();
+        cbTipo.setValue(null);
+        dpConfirmacao.setValue(LocalDate.now());
+        dpEntrega.setValue(null);
+        tfValor.clear();
+        tfResta.clear();
+        cbPagamento.setValue(null);
+        cbNF.setValue("Não precisa de NF");
+        campoResta.setVisible(false);
+        campoResta.setManaged(false);
+        arquivoLayoutSelecionado = null;
     }
 
     private VBox criarCampo(String labelTexto, javafx.scene.Node campo) {
@@ -410,6 +549,7 @@ public class AtendimentoView {
     }
 
     public VBox getView() {
+
         return root;
     }
 }

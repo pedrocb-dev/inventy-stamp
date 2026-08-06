@@ -143,9 +143,7 @@ public class PedidosView {
         );
 
         // Data de entrega + prazo
-        long dias = java.time.temporal.ChronoUnit.DAYS.between(
-                p.getDataConfirmacao(), p.getDataEntrega());
-        Label lblEntrega = new Label("📅 Entrega: " + p.getDataEntrega().format(fmt) + "  ⏱ " + dias + " dia(s)");
+        Label lblEntrega = new Label("📅 Entrega: " + p.getDataEntrega().format(fmt));
         lblEntrega.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
         lblEntrega.setWrapText(true);
 
@@ -473,6 +471,7 @@ public class PedidosView {
 
     private String getCorPrazo(LocalDate dataEntrega) {
         LocalDate hoje = LocalDate.now();
+        if (dataEntrega.isBefore(hoje)) return "#000000";
         if (dataEntrega.isEqual(hoje)) return "#e74c3c";
         if (dataEntrega.isEqual(hoje.plusDays(1))) return "#f39c12";
         return "#27ae60";
