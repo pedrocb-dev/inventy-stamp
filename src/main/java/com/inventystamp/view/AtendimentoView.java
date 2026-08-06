@@ -69,9 +69,56 @@ public class AtendimentoView {
         tfNome = criarTextField("Nome do cliente", 200);
         tfTelefone = criarTextField("(11) 99999-9999", 140);
 
+        Button btnCopiarTelefone = new Button("📋");
+        btnCopiarTelefone.setTooltip(new Tooltip("Copiar telefone"));
+        btnCopiarTelefone.setPrefSize(38, 38);
+        btnCopiarTelefone.setStyle(
+                "-fx-background-color: #3498db; -fx-text-fill: white; " +
+                        "-fx-background-radius: 8; -fx-font-size: 15px;"
+        );
+        btnCopiarTelefone.setOnMouseEntered(e -> btnCopiarTelefone.setStyle(
+                "-fx-background-color: #2980b9; -fx-text-fill: white; " +
+                        "-fx-background-radius: 8; -fx-font-size: 15px;"
+        ));
+        btnCopiarTelefone.setOnMouseExited(e -> btnCopiarTelefone.setStyle(
+                "-fx-background-color: #3498db; -fx-text-fill: white; " +
+                        "-fx-background-radius: 8; -fx-font-size: 15px;"
+        ));
+        Label lblCopiado = new Label("Copiado!");
+        lblCopiado.setStyle("-fx-font-size: 10px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
+        lblCopiado.setVisible(false);
+        lblCopiado.setMinWidth(60);
+        lblCopiado.setAlignment(Pos.CENTER);
+
+        btnCopiarTelefone.setOnAction(e -> {
+            if (!tfTelefone.getText().isBlank()) {
+                javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+                javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+                content.putString(tfTelefone.getText().trim());
+                clipboard.setContent(content);
+
+                lblCopiado.setVisible(true);
+                lblCopiado.setOpacity(1.0);
+
+                javafx.animation.FadeTransition fade = new javafx.animation.FadeTransition(
+                        javafx.util.Duration.millis(1200), lblCopiado);
+                fade.setFromValue(1.0);
+                fade.setToValue(0.0);
+                fade.setDelay(javafx.util.Duration.millis(600));
+                fade.setOnFinished(ev -> lblCopiado.setVisible(false));
+                fade.play();
+            }
+        });
+
+        VBox botaoComLegenda = new VBox(2, btnCopiarTelefone, lblCopiado);
+        botaoComLegenda.setAlignment(Pos.CENTER);
+
+        HBox telefoneComBotao = new HBox(6, tfTelefone, botaoComLegenda);
+        telefoneComBotao.setAlignment(Pos.CENTER_LEFT);
+
         HBox linha1 = new HBox(12,
                 criarCampo("👤 Cliente *", tfNome),
-                criarCampoFixo("📞 Telefone", tfTelefone, 160)
+                criarCampoFixo("📞 Telefone", telefoneComBotao, 200)
         );
 
         taAnotacao = new TextArea();
