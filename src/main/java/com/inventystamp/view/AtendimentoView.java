@@ -41,6 +41,7 @@ public class AtendimentoView {
     private DatePicker dpConfirmacao, dpEntrega;
     private VBox campoResta;
     private VBox listaRascunhos;
+    private Label lblAvisoRascunho;
 
     public AtendimentoView() {
         construir();
@@ -53,6 +54,43 @@ public class AtendimentoView {
 
         Label titulo = new Label("🎧 Novo Pedido");
         titulo.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+// Ícone de aviso — triângulo laranja com "!" vazado
+        StackPane iconeAviso = new StackPane();
+        iconeAviso.setPrefSize(28, 26);
+
+        javafx.scene.shape.Polygon triangulo = new javafx.scene.shape.Polygon();
+        triangulo.getPoints().addAll(
+                14.0, 0.0,
+                28.0, 26.0,
+                0.0, 26.0
+        );
+        triangulo.setFill(javafx.scene.paint.Color.web("#e67e22"));
+
+        Label exclamacao = new Label("!");
+        exclamacao.setStyle(
+                "-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; " +
+                        "-fx-font-family: 'Arial'; -fx-effect: none;"
+        );
+        exclamacao.setTranslateY(3);
+
+        iconeAviso.getChildren().addAll(triangulo, exclamacao);
+
+        lblAvisoRascunho = new Label("rascunho(s) pendente(s)");
+        lblAvisoRascunho.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
+
+        HBox avisoBox = new HBox(6, iconeAviso, lblAvisoRascunho);
+        avisoBox.setAlignment(Pos.CENTER_LEFT);
+        avisoBox.setVisible(false);
+        avisoBox.setManaged(false);
+        avisoBox.setPadding(new Insets(4, 10, 4, 10));
+        avisoBox.setStyle(
+                "-fx-background-color: #fef5e7; -fx-background-radius: 6; " +
+                        "-fx-border-color: #e67e22; -fx-border-radius: 6; -fx-border-width: 1;"
+        );
+
+        HBox cabecalhoTitulo = new HBox(16, titulo, avisoBox);
+        cabecalhoTitulo.setAlignment(Pos.CENTER_LEFT);
 
         HBox container = new HBox(20);
         container.setAlignment(Pos.TOP_CENTER);
@@ -445,7 +483,7 @@ public class AtendimentoView {
         scroll.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
-        root.getChildren().addAll(titulo, scroll);
+        root.getChildren().addAll(cabecalhoTitulo, scroll);
 
         carregarRascunhos();
     }
@@ -453,6 +491,16 @@ public class AtendimentoView {
     private void carregarRascunhos() {
         listaRascunhos.getChildren().clear();
         List<RascunhoPedido> rascunhos = rascunhoDAO.listarTodos();
+
+        HBox avisoBox = (HBox) lblAvisoRascunho.getParent();
+        if (rascunhos.isEmpty()) {
+            avisoBox.setVisible(false);
+            avisoBox.setManaged(false);
+        } else {
+            avisoBox.setVisible(true);
+            avisoBox.setManaged(true);
+            lblAvisoRascunho.setText(rascunhos.size() + " rascunho(s) pendente(s)");
+        }
 
         if (rascunhos.isEmpty()) {
             Label vazio = new Label("Nenhum rascunho salvo.");
