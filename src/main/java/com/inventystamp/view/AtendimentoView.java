@@ -2,13 +2,11 @@ package com.inventystamp.view;
 
 import com.inventystamp.dao.PedidoDAO;
 import com.inventystamp.dao.RascunhoDAO;
-import com.inventystamp.dao.TarefaDAO;
 import com.inventystamp.model.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -17,7 +15,6 @@ import java.math.BigDecimal;
 public class AtendimentoView {
 
     private final PedidoDAO pedidoDAO = new PedidoDAO();
-    private final TarefaDAO tarefaDAO = new TarefaDAO();
     private final RascunhoDAO rascunhoDAO = new RascunhoDAO();
     private VBox root;
     private final DateTimeFormatter fmtSql = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -332,16 +329,6 @@ public class AtendimentoView {
             }
 
             pedidoDAO.salvar(p);
-
-            String[] tarefasAuto = {"Fazer layout", "Fazer arquivo", "Dobrar"};
-            for (String desc : tarefasAuto) {
-                Tarefa t = new Tarefa();
-                t.setDescricao(desc);
-                t.setPedido(p);
-                t.setOrigem(OrigemTarefa.PEDIDO);
-                t.setResponsavelDestino(Perfil.PRODUCAO);
-                tarefaDAO.salvar(t);
-            }
 
             limparFormulario();
 
