@@ -24,7 +24,9 @@ public class PedidosView {
     private final PedidoDAO pedidoDAO = new PedidoDAO();
     private GridPane gridPedidos;
     private VBox root;
-    private String filtroAtual = "TODOS";
+    private String textoPesquisa = "";
+    private final java.util.Set<TipoPersonalizacao> filtrosSelecionados =
+            new java.util.HashSet<>(java.util.Arrays.asList(TipoPersonalizacao.values()));
     private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public PedidosView() {
@@ -39,18 +41,57 @@ public class PedidosView {
         Label titulo = new Label("📋 Pedidos");
         titulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        HBox filtros = new HBox(10);
+        FlowPane filtros = new FlowPane(8, 8);
         filtros.setAlignment(Pos.CENTER_LEFT);
 
-        Button btnTodos = criarBotaoFiltro("Todos");
-        Button btnBordado = criarBotaoFiltro("Bordado");
-        Button btnDemais = criarBotaoFiltro("Demais");
+        CheckBox cbFiltroTodos = new CheckBox("Todos");
+        cbFiltroTodos.setSelected(true);
+        cbFiltroTodos.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
 
-        btnTodos.setOnAction(e -> { filtroAtual = "TODOS"; carregarPedidos(); });
-        btnBordado.setOnAction(e -> { filtroAtual = "BORDADO"; carregarPedidos(); });
-        btnDemais.setOnAction(e -> { filtroAtual = "DEMAIS"; carregarPedidos(); });
+        java.util.List<CheckBox> checkboxesTipo = new java.util.ArrayList<>();
+        for (TipoPersonalizacao tipo : TipoPersonalizacao.values()) {
+            CheckBox cb = new CheckBox(tipo.name());
+            cb.setSelected(true);
+            cb.setStyle("-fx-font-size: 12px;");
+            cb.setOnAction(e -> {
+                if (cb.isSelected()) filtrosSelecionados.add(tipo);
+                else filtrosSelecionados.remove(tipo);
 
-        filtros.getChildren().addAll(new Label("Filtrar:"), btnTodos, btnBordado, btnDemais);
+                boolean todosMarcados = filtrosSelecionados.size() == TipoPersonalizacao.values().length;
+                cbFiltroTodos.setSelected(todosMarcados);
+
+                carregarPedidos();
+            });
+            checkboxesTipo.add(cb);
+        }
+
+        cbFiltroTodos.setOnAction(e -> {
+            boolean marcar = cbFiltroTodos.isSelected();
+            filtrosSelecionados.clear();
+            for (CheckBox cb : checkboxesTipo) {
+                cb.setSelected(marcar);
+                if (marcar) filtrosSelecionados.add(TipoPersonalizacao.valueOf(cb.getText()));
+            }
+            carregarPedidos();
+        });
+
+        filtros.getChildren().add(new Label("Filtrar:"));
+        filtros.getChildren().add(cbFiltroTodos);
+        filtros.getChildren().addAll(checkboxesTipo);
+
+        TextField tfPesquisa = new TextField();
+        tfPesquisa.setPromptText("🔍 Pesquisar por nome, código ou anotação...");
+        tfPesquisa.setPrefWidth(320);
+        tfPesquisa.setStyle(
+                "-fx-font-size: 13px; -fx-background-radius: 6; " +
+                        "-fx-border-color: #dcdde1; -fx-border-radius: 6;"
+        );
+        tfPesquisa.textProperty().addListener((obs, oldVal, newVal) -> {
+            textoPesquisa = newVal.toLowerCase().trim();
+            carregarPedidos();
+        });
+
+        VBox linhaFiltrosEPesquisa = new VBox(10, filtros, tfPesquisa);
 
         gridPedidos = new GridPane();
         gridPedidos.setHgap(12);
@@ -70,8 +111,17 @@ public class PedidosView {
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent;");
 
-        root.getChildren().addAll(titulo, filtros, scroll);
+        root.getChildren().addAll(titulo, linhaFiltrosEPesquisa, scroll);
         VBox.setVgrow(scroll, Priority.ALWAYS);
+
+        carregarPedidos();
+
+// Atualiza automaticamente a cada 1 minuto
+        javafx.animation.Timeline autoRefresh = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.minutes(1), e -> carregarPedidos())
+        );
+        autoRefresh.setCycleCount(javafx.animation.Timeline.INDEFINITE);
+        autoRefresh.play();
 
         carregarPedidos();
     }
@@ -82,10 +132,15 @@ public class PedidosView {
 
         List<Pedido> pedidos = pedidoDAO.listarTodos().stream()
                 .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
+                .filter(p -> filtrosSelecionados.contains(p.getTipoPersonalizacao()))
                 .filter(p -> {
-                    if (filtroAtual.equals("BORDADO")) return p.getTipoPersonalizacao() == TipoPersonalizacao.BORDADO;
-                    if (filtroAtual.equals("DEMAIS")) return p.getTipoPersonalizacao() != TipoPersonalizacao.BORDADO;
-                    return true;
+                    if (textoPesquisa.isBlank()) return true;
+                    String nome = p.getClienteNome() != null ? p.getClienteNome().toLowerCase() : "";
+                    String codigo = extrairCodigo(p.getClienteTelefone()).toLowerCase();
+                    String telefone = p.getClienteTelefone() != null ? p.getClienteTelefone().toLowerCase() : "";
+                    String anotacao = p.getAnotacao() != null ? p.getAnotacao().toLowerCase() : "";
+                    return nome.contains(textoPesquisa) || codigo.contains(textoPesquisa)
+                            || telefone.contains(textoPesquisa) || anotacao.contains(textoPesquisa);
                 })
                 .sorted((a, b) -> a.getDataEntrega().compareTo(b.getDataEntrega()))
                 .toList();
