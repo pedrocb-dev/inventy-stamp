@@ -26,11 +26,17 @@ public class EstatisticaDAO {
     }
 
     public void salvarOuAtualizar(EstatisticasMes e) {
-        String sql = "INSERT INTO estatisticas_mes (ano, mes, lucro_bruto, lucro_bordado, lucro_outros) " +
-                "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
+        String sql = "INSERT INTO estatisticas_mes (ano, mes, lucro_bruto, lucro_bordado, lucro_dtf, " +
+                "lucro_plotter, lucro_sublimacao, lucro_transfer, lucro_silkscreen, lucro_sem_personalizacao) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
                 "lucro_bruto = lucro_bruto + VALUES(lucro_bruto), " +
                 "lucro_bordado = lucro_bordado + VALUES(lucro_bordado), " +
-                "lucro_outros = lucro_outros + VALUES(lucro_outros)";
+                "lucro_dtf = lucro_dtf + VALUES(lucro_dtf), " +
+                "lucro_plotter = lucro_plotter + VALUES(lucro_plotter), " +
+                "lucro_sublimacao = lucro_sublimacao + VALUES(lucro_sublimacao), " +
+                "lucro_transfer = lucro_transfer + VALUES(lucro_transfer), " +
+                "lucro_silkscreen = lucro_silkscreen + VALUES(lucro_silkscreen), " +
+                "lucro_sem_personalizacao = lucro_sem_personalizacao + VALUES(lucro_sem_personalizacao)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -38,7 +44,12 @@ public class EstatisticaDAO {
             ps.setInt(2, e.getMes());
             ps.setBigDecimal(3, e.getLucroBruto());
             ps.setBigDecimal(4, e.getLucroBordado());
-            ps.setBigDecimal(5, e.getLucroOutros());
+            ps.setBigDecimal(5, e.getLucroDtf());
+            ps.setBigDecimal(6, e.getLucroPlotter());
+            ps.setBigDecimal(7, e.getLucroSublimacao());
+            ps.setBigDecimal(8, e.getLucroTransfer());
+            ps.setBigDecimal(9, e.getLucroSilkscreen());
+            ps.setBigDecimal(10, e.getLucroSemPersonalizacao());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -117,7 +128,12 @@ public class EstatisticaDAO {
         e.setMes(rs.getInt("mes"));
         e.setLucroBruto(rs.getBigDecimal("lucro_bruto"));
         e.setLucroBordado(rs.getBigDecimal("lucro_bordado"));
-        e.setLucroOutros(rs.getBigDecimal("lucro_outros"));
+        e.setLucroDtf(rs.getBigDecimal("lucro_dtf"));
+        e.setLucroPlotter(rs.getBigDecimal("lucro_plotter"));
+        e.setLucroSublimacao(rs.getBigDecimal("lucro_sublimacao"));
+        e.setLucroTransfer(rs.getBigDecimal("lucro_transfer"));
+        e.setLucroSilkscreen(rs.getBigDecimal("lucro_silkscreen"));
+        e.setLucroSemPersonalizacao(rs.getBigDecimal("lucro_sem_personalizacao"));
         return e;
     }
 }

@@ -135,16 +135,15 @@ public class EstatisticasView {
         lblGraficoPizza.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
         PieChart pieChart = new PieChart();
-        pieChart.setPrefHeight(250);
+        pieChart.setPrefHeight(280);
 
-        if (e.getLucroBordado().compareTo(BigDecimal.ZERO) > 0) {
-            pieChart.getData().add(new PieChart.Data("Bordado (R$ " +
-                    e.getLucroBordado().setScale(2, RoundingMode.HALF_UP) + ")", e.getLucroBordado().doubleValue()));
-        }
-        if (e.getLucroOutros().compareTo(BigDecimal.ZERO) > 0) {
-            pieChart.getData().add(new PieChart.Data("Outros (R$ " +
-                    e.getLucroOutros().setScale(2, RoundingMode.HALF_UP) + ")", e.getLucroOutros().doubleValue()));
-        }
+        adicionarFatiaSeMaiorQueZero(pieChart, "Bordado", e.getLucroBordado());
+        adicionarFatiaSeMaiorQueZero(pieChart, "DTF", e.getLucroDtf());
+        adicionarFatiaSeMaiorQueZero(pieChart, "Plotter", e.getLucroPlotter());
+        adicionarFatiaSeMaiorQueZero(pieChart, "Sublimação", e.getLucroSublimacao());
+        adicionarFatiaSeMaiorQueZero(pieChart, "Transfer", e.getLucroTransfer());
+        adicionarFatiaSeMaiorQueZero(pieChart, "Silkscreen", e.getLucroSilkscreen());
+        adicionarFatiaSeMaiorQueZero(pieChart, "Sem personalização", e.getLucroSemPersonalizacao());
 
         if (pieChart.getData().isEmpty()) {
             pieChart.getData().add(new PieChart.Data("Sem dados", 1));
@@ -296,6 +295,14 @@ public class EstatisticasView {
     }
 
     public VBox getView() {
+
         return root;
+    }
+
+    private void adicionarFatiaSeMaiorQueZero(PieChart pieChart, String nome, BigDecimal valor) {
+        if (valor.compareTo(BigDecimal.ZERO) > 0) {
+            pieChart.getData().add(new PieChart.Data(
+                    nome + " (R$ " + valor.setScale(2, RoundingMode.HALF_UP) + ")", valor.doubleValue()));
+        }
     }
 }

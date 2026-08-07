@@ -8,7 +8,12 @@ public class EstatisticasMes {
     private int mes;
     private BigDecimal lucroBruto;
     private BigDecimal lucroBordado;
-    private BigDecimal lucroOutros;
+    private BigDecimal lucroDtf;
+    private BigDecimal lucroPlotter;
+    private BigDecimal lucroSublimacao;
+    private BigDecimal lucroTransfer;
+    private BigDecimal lucroSilkscreen;
+    private BigDecimal lucroSemPersonalizacao;
 
     public EstatisticasMes() {}
 
@@ -27,6 +32,21 @@ public class EstatisticasMes {
     public BigDecimal getLucroBordado() { return lucroBordado != null ? lucroBordado : BigDecimal.ZERO; }
     public void setLucroBordado(BigDecimal lucroBordado) { this.lucroBordado = lucroBordado; }
 
-    public BigDecimal getLucroOutros() { return lucroOutros != null ? lucroOutros : BigDecimal.ZERO; }
-    public void setLucroOutros(BigDecimal lucroOutros) { this.lucroOutros = lucroOutros; }
+    public BigDecimal getLucroDtf() { return lucroDtf != null ? lucroDtf : BigDecimal.ZERO; }
+    public void setLucroDtf(BigDecimal lucroDtf) { this.lucroDtf = lucroDtf; }
+
+    public BigDecimal getLucroPlotter() { return lucroPlotter != null ? lucroPlotter : BigDecimal.ZERO; }
+    public void setLucroPlotter(BigDecimal lucroPlotter) { this.lucroPlotter = lucroPlotter; }
+
+    public BigDecimal getLucroSublimacao() { return lucroSublimacao != null ? lucroSublimacao : BigDecimal.ZERO; }
+    public void setLucroSublimacao(BigDecimal lucroSublimacao) { this.lucroSublimacao = lucroSublimacao; }
+
+    public BigDecimal getLucroTransfer() { return lucroTransfer != null ? lucroTransfer : BigDecimal.ZERO; }
+    public void setLucroTransfer(BigDecimal lucroTransfer) { this.lucroTransfer = lucroTransfer; }
+
+    public BigDecimal getLucroSilkscreen() { return lucroSilkscreen != null ? lucroSilkscreen : BigDecimal.ZERO; }
+    public void setLucroSilkscreen(BigDecimal lucroSilkscreen) { this.lucroSilkscreen = lucroSilkscreen; }
+
+    public BigDecimal getLucroSemPersonalizacao() { return lucroSemPersonalizacao != null ? lucroSemPersonalizacao : BigDecimal.ZERO; }
+    public void setLucroSemPersonalizacao(BigDecimal lucroSemPersonalizacao) { this.lucroSemPersonalizacao = lucroSemPersonalizacao; }
 }

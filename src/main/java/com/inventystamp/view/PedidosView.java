@@ -322,13 +322,22 @@ public class PedidosView {
                 est.setAno(java.time.LocalDate.now().getYear());
                 est.setMes(java.time.LocalDate.now().getMonthValue());
                 est.setLucroBruto(p.getValor());
+                est.setLucroBordado(BigDecimal.ZERO);
+                est.setLucroDtf(BigDecimal.ZERO);
+                est.setLucroPlotter(BigDecimal.ZERO);
+                est.setLucroSublimacao(BigDecimal.ZERO);
+                est.setLucroTransfer(BigDecimal.ZERO);
+                est.setLucroSilkscreen(BigDecimal.ZERO);
+                est.setLucroSemPersonalizacao(BigDecimal.ZERO);
 
-                if (p.getTipoPersonalizacao() == TipoPersonalizacao.BORDADO) {
-                    est.setLucroBordado(p.getValor());
-                    est.setLucroOutros(BigDecimal.ZERO);
-                } else {
-                    est.setLucroBordado(BigDecimal.ZERO);
-                    est.setLucroOutros(p.getValor());
+                switch (p.getTipoPersonalizacao()) {
+                    case BORDADO -> est.setLucroBordado(p.getValor());
+                    case DTF -> est.setLucroDtf(p.getValor());
+                    case PLOTTER -> est.setLucroPlotter(p.getValor());
+                    case SUBLIMACAO -> est.setLucroSublimacao(p.getValor());
+                    case TRANSFER -> est.setLucroTransfer(p.getValor());
+                    case SILKSCREEN -> est.setLucroSilkscreen(p.getValor());
+                    case SEM_PERSONALIZACAO -> est.setLucroSemPersonalizacao(p.getValor());
                 }
 
                 estatisticaDAO.salvarOuAtualizar(est);
