@@ -228,11 +228,6 @@ public class PedidosView {
         lblAnotacao.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
         lblAnotacao.setWrapText(true);
 
-        // Layout
-        VBox layoutBox = new VBox(8);
-        layoutBox.setVisible(false);
-        layoutBox.setManaged(false);
-
         // Botões
         HBox acoes = new HBox(8);
         acoes.setAlignment(Pos.CENTER_RIGHT);
@@ -263,53 +258,7 @@ public class PedidosView {
         btnImprimir.setOnAction(e -> imprimirEtiqueta(p));
 
         // Verifica se tem layout
-        if (p.getLayoutPath() != null && !p.getLayoutPath().isBlank()) {
-            File arquivoLayout = new File(p.getLayoutPath());
-            if (arquivoLayout.exists()) {
-                String nome = arquivoLayout.getName().toLowerCase();
-
-                if (nome.endsWith(".png") || nome.endsWith(".jpg") || nome.endsWith(".jpeg")) {
-                    javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView(
-                            new javafx.scene.image.Image(arquivoLayout.toURI().toString())
-                    );
-                    imgView.setFitWidth(200);
-                    imgView.setPreserveRatio(true);
-                    layoutBox.getChildren().add(imgView);
-                } else if (nome.endsWith(".pdf")) {
-                    Button btnVerPdf = new Button("📄 Ver PDF");
-                    btnVerPdf.setStyle(
-                            "-fx-background-color: #e67e22; -fx-text-fill: white; " +
-                                    "-fx-background-radius: 5; -fx-font-size: 12px;"
-                    );
-                    btnVerPdf.setOnAction(ev -> {
-                        try {
-                            java.awt.Desktop.getDesktop().open(arquivoLayout);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                    });
-                    layoutBox.getChildren().add(btnVerPdf);
-                }
-
-                Button btnToggleLayout = new Button("🖼 Ver Layout");
-                btnToggleLayout.setStyle(
-                        "-fx-background-color: #8e44ad; -fx-text-fill: white; " +
-                                "-fx-background-radius: 5; -fx-font-size: 13px;"
-                );
-                btnToggleLayout.setOnAction(ev -> {
-                    boolean visivel = layoutBox.isVisible();
-                    layoutBox.setVisible(!visivel);
-                    layoutBox.setManaged(!visivel);
-                    btnToggleLayout.setText(visivel ? "🖼 Ver Layout" : "🙈 Esconder Layout");
-                });
-
-                acoes.getChildren().addAll(btnImprimir, btnToggleLayout, btnConcluir, btnEditar, btnRemover);
-            } else {
-                acoes.getChildren().addAll(btnImprimir, btnConcluir, btnEditar, btnRemover);
-            }
-        } else {
-            acoes.getChildren().addAll(btnImprimir, btnConcluir, btnEditar, btnRemover);
-        }
+        acoes.getChildren().addAll(btnImprimir, btnConcluir, btnEditar, btnRemover);
 
         btnConcluir.setOnAction(e -> {
             p.setSituacao(SituacaoPedido.PRONTO);
@@ -394,54 +343,7 @@ public class PedidosView {
         VBox topo = new VBox(10, barra, conteudo);
         VBox.setVgrow(topo, Priority.ALWAYS);
 
-// Extensão do layout — mesma largura do card
-        VBox extensaoLayout = new VBox();
-        extensaoLayout.setVisible(false);
-        extensaoLayout.setManaged(false);
-        extensaoLayout.setMaxWidth(Double.MAX_VALUE);
-        extensaoLayout.setPrefHeight(300);
-        extensaoLayout.setMinHeight(300);
-        extensaoLayout.setPadding(new Insets(10, 0, 0, 0));
-        extensaoLayout.setStyle(
-                "-fx-border-color: #dcdde1; -fx-border-width: 1 0 0 0;"
-        );
-
-        if (p.getLayoutPath() != null && !p.getLayoutPath().isBlank()) {
-            File arquivoLayout = new File(p.getLayoutPath());
-            if (arquivoLayout.exists()) {
-                String nome = arquivoLayout.getName().toLowerCase();
-                if (nome.endsWith(".png") || nome.endsWith(".jpg") || nome.endsWith(".jpeg")) {
-                    javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView(
-                            new javafx.scene.image.Image(arquivoLayout.toURI().toString())
-                    );
-                    imgView.setPreserveRatio(true);
-                    imgView.setFitWidth(card.getWidth() > 0 ? card.getWidth() - 28 : 400);
-                    imgView.setFitHeight(280);
-                    card.widthProperty().addListener((obs, oldVal, newVal) ->
-                            imgView.setFitWidth(newVal.doubleValue() - 28));
-                    extensaoLayout.getChildren().add(imgView);
-                }
-            }
-        }
-
-// Atualiza botão toggle para controlar extensão
-        if (p.getLayoutPath() != null && !p.getLayoutPath().isBlank()) {
-            File arquivoLayout = new File(p.getLayoutPath());
-            if (arquivoLayout.exists()) {
-                for (javafx.scene.Node node : acoes.getChildren()) {
-                    if (node instanceof Button btn && btn.getText().contains("Layout")) {
-                        btn.setOnAction(ev -> {
-                            boolean visivel = extensaoLayout.isVisible();
-                            extensaoLayout.setVisible(!visivel);
-                            extensaoLayout.setManaged(!visivel);
-                            btn.setText(visivel ? "🖼 Ver Layout" : "🙈 Esconder Layout");
-                        });
-                    }
-                }
-            }
-        }
-
-        card.getChildren().addAll(topo, acoes, extensaoLayout);
+        card.getChildren().addAll(topo, acoes);
         return card;
     }
 

@@ -7,21 +7,12 @@ import com.inventystamp.model.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.stage.FileChooser;
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.math.BigDecimal;
 
 public class AtendimentoView {
 
@@ -29,8 +20,6 @@ public class AtendimentoView {
     private final TarefaDAO tarefaDAO = new TarefaDAO();
     private final RascunhoDAO rascunhoDAO = new RascunhoDAO();
     private VBox root;
-    private File arquivoLayoutSelecionado = null;
-    private static final String PASTA_LAYOUTS = System.getProperty("user.home") + "\\Desktop\\layouts-inventy\\";
     private final DateTimeFormatter fmtSql = DateTimeFormatter.ISO_LOCAL_DATE;
 
     private TextField tfNome, tfTelefone, tfValor, tfResta;
@@ -274,104 +263,33 @@ public class AtendimentoView {
             lblFeedback.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 14px;");
         });
 
-        VBox uploadCard = new VBox(14);
-        uploadCard.setPadding(new Insets(24));
-        uploadCard.setPrefWidth(280);
-        uploadCard.setMinWidth(280);
-        uploadCard.setMaxWidth(280);
-        uploadCard.setAlignment(Pos.TOP_CENTER);
-        uploadCard.setStyle(
+        VBox sugestoesCard = new VBox(12);
+        sugestoesCard.setPadding(new Insets(24));
+        sugestoesCard.setPrefWidth(280);
+        sugestoesCard.setMinWidth(280);
+        sugestoesCard.setMaxWidth(280);
+        sugestoesCard.setAlignment(Pos.TOP_LEFT);
+        sugestoesCard.setStyle(
                 "-fx-background-color: white; -fx-background-radius: 10; " +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);"
         );
 
-        Label lblUploadTitulo = new Label("🖼 Layout");
-        lblUploadTitulo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        Label lblSugestoesTitulo = new Label("💡 Sugestões de anotação");
+        lblSugestoesTitulo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        Label lblOpcional = new Label("(opcional)");
-        lblOpcional.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
+        Label lblSugestao1 = new Label("Tamanho, cor e quantidade de peças.");
+        lblSugestao1.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        lblSugestao1.setWrapText(true);
 
-        ImageView preview = new ImageView();
-        preview.setFitWidth(220);
-        preview.setFitHeight(200);
-        preview.setPreserveRatio(true);
+        Label lblSugestao2 = new Label("Tamanho de estampa A4 ou A3.");
+        lblSugestao2.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        lblSugestao2.setWrapText(true);
 
-        Label lblArquivo = new Label("Nenhum arquivo selecionado");
-        lblArquivo.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
-        lblArquivo.setWrapText(true);
+        Label lblSugestao3 = new Label("Pedir peças pra Simone ou pro Marco.");
+        lblSugestao3.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        lblSugestao3.setWrapText(true);
 
-        VBox dropArea = new VBox(10);
-        dropArea.setAlignment(Pos.CENTER);
-        dropArea.setPrefHeight(220);
-        dropArea.setPadding(new Insets(10));
-        dropArea.setStyle(
-                "-fx-background-color: #f8f9fa; -fx-background-radius: 8; " +
-                        "-fx-border-color: #dcdde1; -fx-border-radius: 8; -fx-border-style: dashed;"
-        );
-
-        Label lblDropIcon = new Label("📁");
-        lblDropIcon.setStyle("-fx-font-size: 36px;");
-
-        Label lblDropText = new Label("Clique para selecionar\nPNG, JPG ou PDF");
-        lblDropText.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d; -fx-text-alignment: center;");
-        lblDropText.setWrapText(true);
-
-        dropArea.getChildren().addAll(lblDropIcon, lblDropText, preview, lblArquivo);
-
-        Button btnSelecionar = new Button("📂 Selecionar arquivo");
-        btnSelecionar.setPrefWidth(220);
-        btnSelecionar.setPrefHeight(38);
-        btnSelecionar.setStyle(
-                "-fx-background-color: #3498db; -fx-text-fill: white; " +
-                        "-fx-background-radius: 6; -fx-font-size: 13px;"
-        );
-
-        Button btnLimpar = new Button("✖ Remover");
-        btnLimpar.setPrefWidth(220);
-        btnLimpar.setPrefHeight(38);
-        btnLimpar.setStyle(
-                "-fx-background-color: #e74c3c; -fx-text-fill: white; " +
-                        "-fx-background-radius: 6; -fx-font-size: 13px;"
-        );
-        btnLimpar.setVisible(false);
-        btnLimpar.setManaged(false);
-
-        btnSelecionar.setOnAction(e -> {
-            FileChooser fc = new FileChooser();
-            fc.setTitle("Selecionar Layout");
-            fc.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("Imagens e PDF", "*.png", "*.jpg", "*.jpeg", "*.pdf")
-            );
-            File arquivo = fc.showOpenDialog(root.getScene().getWindow());
-            if (arquivo != null) {
-                arquivoLayoutSelecionado = arquivo;
-                lblArquivo.setText(arquivo.getName());
-                lblArquivo.setStyle("-fx-font-size: 12px; -fx-text-fill: #27ae60;");
-                btnLimpar.setVisible(true);
-                btnLimpar.setManaged(true);
-
-                String nome = arquivo.getName().toLowerCase();
-                if (nome.endsWith(".png") || nome.endsWith(".jpg") || nome.endsWith(".jpeg")) {
-                    preview.setImage(new Image(arquivo.toURI().toString()));
-                    lblDropIcon.setText("🖼");
-                } else {
-                    preview.setImage(null);
-                    lblDropIcon.setText("📄");
-                }
-            }
-        });
-
-        btnLimpar.setOnAction(e -> {
-            arquivoLayoutSelecionado = null;
-            lblArquivo.setText("Nenhum arquivo selecionado");
-            lblArquivo.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
-            preview.setImage(null);
-            lblDropIcon.setText("📁");
-            btnLimpar.setVisible(false);
-            btnLimpar.setManaged(false);
-        });
-
-        uploadCard.getChildren().addAll(lblUploadTitulo, lblOpcional, dropArea, btnSelecionar, btnLimpar);
+        sugestoesCard.getChildren().addAll(lblSugestoesTitulo, lblSugestao1, lblSugestao2, lblSugestao3);
 
         HBox botaoBox = new HBox(10, btnSalvar, btnSalvarRascunho);
         botaoBox.setAlignment(Pos.CENTER_LEFT);
@@ -413,22 +331,6 @@ public class AtendimentoView {
                 return;
             }
 
-            if (arquivoLayoutSelecionado != null) {
-                try {
-                    File pasta = new File(PASTA_LAYOUTS);
-                    if (!pasta.exists()) pasta.mkdirs();
-
-                    String ext = arquivoLayoutSelecionado.getName()
-                            .substring(arquivoLayoutSelecionado.getName().lastIndexOf("."));
-                    String nomeArquivo = "layout_" + System.currentTimeMillis() + ext;
-                    Path destino = Paths.get(PASTA_LAYOUTS + nomeArquivo);
-                    Files.copy(arquivoLayoutSelecionado.toPath(), destino, StandardCopyOption.REPLACE_EXISTING);
-                    p.setLayoutPath(destino.toString());
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-
             pedidoDAO.salvar(p);
 
             String[] tarefasAuto = {"Fazer layout", "Fazer arquivo", "Dobrar"};
@@ -442,18 +344,12 @@ public class AtendimentoView {
             }
 
             limparFormulario();
-            preview.setImage(null);
-            lblDropIcon.setText("📁");
-            lblArquivo.setText("Nenhum arquivo selecionado");
-            lblArquivo.setStyle("-fx-font-size: 12px; -fx-text-fill: #7f8c8d;");
-            btnLimpar.setVisible(false);
-            btnLimpar.setManaged(false);
 
             lblFeedback.setText("✅ Pedido salvo com sucesso!");
             lblFeedback.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 14px;");
         });
 
-        container.getChildren().addAll(formCard, uploadCard);
+        container.getChildren().addAll(formCard, sugestoesCard);
 
         formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4, linha5);
 
@@ -609,7 +505,6 @@ public class AtendimentoView {
         cbNF.setValue("Não precisa de NF");
         campoResta.setVisible(false);
         campoResta.setManaged(false);
-        arquivoLayoutSelecionado = null;
     }
 
     private VBox criarCampo(String labelTexto, javafx.scene.Node campo) {
