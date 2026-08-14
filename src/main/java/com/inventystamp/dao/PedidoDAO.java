@@ -33,8 +33,8 @@ public class PedidoDAO {
 
     public void salvar(Pedido p) {
         String sql = "INSERT INTO pedidos (cliente_nome, cliente_telefone, anotacao, tipo_personalizacao, " +
-                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -50,6 +50,7 @@ public class PedidoDAO {
             ps.setString(9, p.getSituacao().name());
             ps.setBigDecimal(10, p.getResta());
             ps.setBoolean(11, p.isPrecisaNf());
+            ps.setBoolean(12, p.isDtfMontado());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -63,7 +64,7 @@ public class PedidoDAO {
 
     public void atualizar(Pedido p) {
         String sql = "UPDATE pedidos SET cliente_nome=?, cliente_telefone=?, anotacao=?, tipo_personalizacao=?, " +
-                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=? WHERE id=?";
+                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=? WHERE id=?";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -80,7 +81,8 @@ public class PedidoDAO {
             ps.setString(10, p.getFotoConclusao());
             ps.setBigDecimal(11, p.getResta());
             ps.setBoolean(12, p.isPrecisaNf());
-            ps.setInt(13, p.getId());
+            ps.setBoolean(13, p.isDtfMontado());
+            ps.setInt(14, p.getId());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -117,6 +119,7 @@ public class PedidoDAO {
         p.setFotoConclusao(rs.getString("foto_conclusao"));
         p.setResta(rs.getBigDecimal("resta"));
         p.setPrecisaNf(rs.getBoolean("precisa_nf"));
+        p.setDtfMontado(rs.getBoolean("dtf_montado"));
         p.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
         return p;
     }

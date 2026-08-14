@@ -25,6 +25,7 @@ public class PedidosView {
     private GridPane gridPedidos;
     private VBox root;
     private String textoPesquisa = "";
+    private Label lblContadorDtf;
     private final java.util.Set<TipoPersonalizacao> filtrosSelecionados =
             new java.util.HashSet<>(java.util.Arrays.asList(TipoPersonalizacao.values()));
     private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -40,6 +41,17 @@ public class PedidosView {
 
         Label titulo = new Label("📋 Pedidos");
         titulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        lblContadorDtf = new Label();
+        lblContadorDtf.setStyle(
+                "-fx-font-size: 13px; -fx-text-fill: white; -fx-font-weight: bold; " +
+                        "-fx-background-color: #e67e22; -fx-background-radius: 20; -fx-padding: 6 14 6 14;"
+        );
+        lblContadorDtf.setVisible(false);
+        lblContadorDtf.setManaged(false);
+
+        HBox cabecalhoPedidos = new HBox(14, titulo, lblContadorDtf);
+        cabecalhoPedidos.setAlignment(Pos.CENTER_LEFT);
 
         FlowPane filtros = new FlowPane(8, 8);
         filtros.setAlignment(Pos.CENTER_LEFT);
@@ -80,7 +92,7 @@ public class PedidosView {
         filtros.getChildren().addAll(checkboxesTipo);
 
         TextField tfPesquisa = new TextField();
-        tfPesquisa.setPromptText("🔍 Pesquisar por nome, código ou anotação...");
+        tfPesquisa.setPromptText("🔍 Pesquisar por nome, código, data ou anotação...");
         tfPesquisa.setPrefWidth(320);
         tfPesquisa.setStyle(
                 "-fx-font-size: 13px; -fx-background-radius: 6; " +
@@ -111,7 +123,7 @@ public class PedidosView {
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent;");
 
-        root.getChildren().addAll(titulo, linhaFiltrosEPesquisa, scroll);
+        root.getChildren().addAll(cabecalhoPedidos, linhaFiltrosEPesquisa, scroll);
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
         carregarPedidos();
@@ -128,7 +140,23 @@ public class PedidosView {
 
     private void carregarPedidos() {
         gridPedidos.getChildren().clear();
-        gridPedidos.getRowConstraints().clear();
+
+        List<Pedido> todosPedidosAtivos = pedidoDAO.listarTodos().stream()
+                .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
+                .toList();
+
+        long dtfsPendentes = todosPedidosAtivos.stream()
+                .filter(p -> p.getTipoPersonalizacao() == TipoPersonalizacao.DTF && !p.isDtfMontado())
+                .count();
+
+        if (dtfsPendentes > 0) {
+            lblContadorDtf.setText("🔶 " + dtfsPendentes + " DTF(s) para montar");
+            lblContadorDtf.setVisible(true);
+            lblContadorDtf.setManaged(true);
+        } else {
+            lblContadorDtf.setVisible(false);
+            lblContadorDtf.setManaged(false);
+        }
 
         List<Pedido> pedidos = pedidoDAO.listarTodos().stream()
                 .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
@@ -139,8 +167,11 @@ public class PedidosView {
                     String codigo = extrairCodigo(p.getClienteTelefone()).toLowerCase();
                     String telefone = p.getClienteTelefone() != null ? p.getClienteTelefone().toLowerCase() : "";
                     String anotacao = p.getAnotacao() != null ? p.getAnotacao().toLowerCase() : "";
+                    String dataEntrega = p.getDataEntrega() != null ? p.getDataEntrega().format(fmt).toLowerCase() : "";
+                    String dataConfirmacao = p.getDataConfirmacao() != null ? p.getDataConfirmacao().format(fmt).toLowerCase() : "";
                     return nome.contains(textoPesquisa) || codigo.contains(textoPesquisa)
-                            || telefone.contains(textoPesquisa) || anotacao.contains(textoPesquisa);
+                            || telefone.contains(textoPesquisa) || anotacao.contains(textoPesquisa)
+                            || dataEntrega.contains(textoPesquisa) || dataConfirmacao.contains(textoPesquisa);
                 })
                 .sorted((a, b) -> a.getDataEntrega().compareTo(b.getDataEntrega()))
                 .toList();
@@ -189,6 +220,27 @@ public class PedidosView {
         Label lblNome = new Label(p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo));
         lblNome.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         lblNome.setWrapText(true);
+
+// Sinal de DTF não montado
+        Button btnSinalDtf = new Button("🔶");
+        btnSinalDtf.setStyle(
+                "-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;"
+        );
+        btnSinalDtf.setVisible(p.getTipoPersonalizacao() == TipoPersonalizacao.DTF && !p.isDtfMontado());
+        btnSinalDtf.setManaged(p.getTipoPersonalizacao() == TipoPersonalizacao.DTF && !p.isDtfMontado());
+        btnSinalDtf.setOnAction(e -> {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "O DTF foi montado?", ButtonType.YES, ButtonType.NO);
+            confirm.setHeaderText(null);
+            confirm.showAndWait().ifPresent(r -> {
+                if (r == ButtonType.YES) {
+                    p.setDtfMontado(true);
+                    pedidoDAO.atualizar(p);
+                    btnSinalDtf.setVisible(false);
+                    btnSinalDtf.setManaged(false);
+                    carregarPedidos();
+                }
+            });
+        });
 
         // Tipo de personalização
         Label lblTipo = new Label(p.getTipoPersonalizacao().name());
@@ -319,8 +371,11 @@ public class PedidosView {
             });
         });
 
-        // Coluna esquerda — informações do pedido
-        VBox colunaEsquerda = new VBox(10, lblNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblNF);
+        HBox linhaNome = new HBox(8, lblNome, btnSinalDtf);
+        linhaNome.setAlignment(Pos.CENTER_LEFT);
+
+// Coluna esquerda — informações do pedido
+        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblNF);
         colunaEsquerda.setPrefWidth(200);
         HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 

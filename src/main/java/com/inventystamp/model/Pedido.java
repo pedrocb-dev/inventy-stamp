@@ -19,6 +19,7 @@ public class Pedido {
     private java.math.BigDecimal resta;
     private LocalDateTime criadoEm;
     private boolean precisaNf;
+    private boolean dtfMontado;
 
     public Pedido() {}
 
@@ -63,4 +64,7 @@ public class Pedido {
 
     public boolean isPrecisaNf() { return precisaNf; }
     public void setPrecisaNf(boolean precisaNf) { this.precisaNf = precisaNf; }
+
+    public boolean isDtfMontado() { return dtfMontado; }
+    public void setDtfMontado(boolean dtfMontado) { this.dtfMontado = dtfMontado; }
 }
