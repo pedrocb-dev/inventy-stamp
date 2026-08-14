@@ -21,10 +21,7 @@ public class PedidoDAO {
                 pedidos.add(mapear(rs));
             }
 
-            System.out.println("Total de pedidos carregados: " + pedidos.size());
-
         } catch (SQLException e) {
-            System.out.println("ERRO ao carregar pedidos: " + e.getMessage());
             e.printStackTrace();
         }
 

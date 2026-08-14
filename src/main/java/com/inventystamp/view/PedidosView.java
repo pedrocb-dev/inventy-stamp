@@ -26,8 +26,7 @@ public class PedidosView {
     private VBox root;
     private String textoPesquisa = "";
     private Label lblContadorDtf;
-    private final java.util.Set<TipoPersonalizacao> filtrosSelecionados =
-            new java.util.HashSet<>(java.util.Arrays.asList(TipoPersonalizacao.values()));
+    private final java.util.Set<TipoPersonalizacao> filtrosSelecionados = new java.util.HashSet<>();
     private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public PedidosView() {
@@ -56,39 +55,41 @@ public class PedidosView {
         Label lblFiltrarTitulo = new Label("Filtrar:");
         lblFiltrarTitulo.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: white;");
 
-        ToggleButton tbFiltroTodos = criarChipFiltro("Todos");
-        tbFiltroTodos.setSelected(true);
+        Button btnFiltroTodos = new Button("Todos");
+        btnFiltroTodos.setStyle(estiloChip(true));
 
         java.util.List<ToggleButton> chipsTipo = new java.util.ArrayList<>();
         for (TipoPersonalizacao tipo : TipoPersonalizacao.values()) {
             ToggleButton chip = criarChipFiltro(tipo.name());
-            chip.setSelected(true);
-            chip.setOnAction(e -> {
-                if (chip.isSelected()) filtrosSelecionados.add(tipo);
-                else filtrosSelecionados.remove(tipo);
-
-                boolean todosMarcados = filtrosSelecionados.size() == TipoPersonalizacao.values().length;
-                tbFiltroTodos.setSelected(todosMarcados);
-
-                carregarPedidos();
-            });
             chipsTipo.add(chip);
         }
 
-        tbFiltroTodos.setOnAction(e -> {
-            boolean marcar = tbFiltroTodos.isSelected();
+        for (ToggleButton chip : chipsTipo) {
+            chip.setOnAction(e -> {
+                TipoPersonalizacao tipoDoChip = TipoPersonalizacao.valueOf(chip.getText());
+                if (chip.isSelected()) filtrosSelecionados.add(tipoDoChip);
+                else filtrosSelecionados.remove(tipoDoChip);
+
+                boolean nenhumEspecificoSelecionado = filtrosSelecionados.isEmpty();
+                btnFiltroTodos.setStyle(estiloChip(nenhumEspecificoSelecionado));
+
+                carregarPedidos();
+            });
+        }
+
+        btnFiltroTodos.setOnAction(e -> {
             filtrosSelecionados.clear();
             for (ToggleButton chip : chipsTipo) {
-                chip.setSelected(marcar);
-                if (marcar) filtrosSelecionados.add(TipoPersonalizacao.valueOf(chip.getText()));
+                chip.setSelected(false);
             }
+            btnFiltroTodos.setStyle(estiloChip(true));
             carregarPedidos();
         });
 
         FlowPane filtros = new FlowPane(8, 8);
         filtros.setAlignment(Pos.CENTER_LEFT);
         filtros.getChildren().add(lblFiltrarTitulo);
-        filtros.getChildren().add(tbFiltroTodos);
+        filtros.getChildren().add(btnFiltroTodos);
         filtros.getChildren().addAll(chipsTipo);
 
         VBox compartimentoFiltros = new VBox(filtros);
@@ -166,7 +167,7 @@ public class PedidosView {
 
         List<Pedido> pedidos = pedidoDAO.listarTodos().stream()
                 .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
-                .filter(p -> filtrosSelecionados.contains(p.getTipoPersonalizacao()))
+                .filter(p -> filtrosSelecionados.isEmpty() || filtrosSelecionados.contains(p.getTipoPersonalizacao()))
                 .filter(p -> {
                     if (textoPesquisa.isBlank()) return true;
                     String nome = p.getClienteNome() != null ? p.getClienteNome().toLowerCase() : "";
@@ -227,22 +228,41 @@ public class PedidosView {
         lblNome.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         lblNome.setWrapText(true);
 
-// Sinal de DTF não montado
-        Button btnSinalDtf = new Button("🔶");
-        btnSinalDtf.setStyle(
-                "-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;"
+// Sinal de DTF não montado — mesmo triângulo do aviso de rascunhos
+        StackPane iconeSinalDtf = new StackPane();
+        iconeSinalDtf.setPrefSize(22, 20);
+        iconeSinalDtf.setStyle("-fx-cursor: hand;");
+
+        javafx.scene.shape.Polygon trianguloDtf = new javafx.scene.shape.Polygon();
+        trianguloDtf.getPoints().addAll(
+                11.0, 0.0,
+                22.0, 20.0,
+                0.0, 20.0
         );
-        btnSinalDtf.setVisible(p.getTipoPersonalizacao() == TipoPersonalizacao.DTF && !p.isDtfMontado());
-        btnSinalDtf.setManaged(p.getTipoPersonalizacao() == TipoPersonalizacao.DTF && !p.isDtfMontado());
-        btnSinalDtf.setOnAction(e -> {
+        trianguloDtf.setFill(javafx.scene.paint.Color.web("#e67e22"));
+
+        Label exclamacaoDtf = new Label("!");
+        exclamacaoDtf.setStyle(
+                "-fx-text-fill: white; -fx-font-size: 11px; -fx-font-weight: bold; " +
+                        "-fx-font-family: 'Arial';"
+        );
+        exclamacaoDtf.setTranslateY(2);
+
+        iconeSinalDtf.getChildren().addAll(trianguloDtf, exclamacaoDtf);
+
+        boolean mostrarSinalDtf = p.getTipoPersonalizacao() == TipoPersonalizacao.DTF && !p.isDtfMontado();
+        iconeSinalDtf.setVisible(mostrarSinalDtf);
+        iconeSinalDtf.setManaged(mostrarSinalDtf);
+
+        iconeSinalDtf.setOnMouseClicked(e -> {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "O DTF foi montado?", ButtonType.YES, ButtonType.NO);
             confirm.setHeaderText(null);
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.YES) {
                     p.setDtfMontado(true);
                     pedidoDAO.atualizar(p);
-                    btnSinalDtf.setVisible(false);
-                    btnSinalDtf.setManaged(false);
+                    iconeSinalDtf.setVisible(false);
+                    iconeSinalDtf.setManaged(false);
                     carregarPedidos();
                 }
             });
@@ -377,7 +397,7 @@ public class PedidosView {
             });
         });
 
-        HBox linhaNome = new HBox(8, lblNome, btnSinalDtf);
+        HBox linhaNome = new HBox(8, lblNome, iconeSinalDtf);
         linhaNome.setAlignment(Pos.CENTER_LEFT);
 
 // Coluna esquerda — informações do pedido
@@ -636,18 +656,18 @@ public class PedidosView {
 
     private ToggleButton criarChipFiltro(String texto) {
         ToggleButton tb = new ToggleButton(texto);
-        tb.setStyle(estiloChip(true));
+        tb.setStyle(estiloChip(false));
         tb.selectedProperty().addListener((obs, oldVal, novoValor) -> tb.setStyle(estiloChip(novoValor)));
         return tb;
     }
 
     private String estiloChip(boolean selecionado) {
         if (selecionado) {
-            return "-fx-background-color: white; -fx-text-fill: #2980b9; " +
+            return "-fx-background-color: rgba(255,255,255,0.25); -fx-text-fill: white; " +
                     "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
                     "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
         } else {
-            return "-fx-background-color: rgba(255,255,255,0.25); -fx-text-fill: white; " +
+            return "-fx-background-color: white; -fx-text-fill: #2980b9; " +
                     "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
                     "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
         }
