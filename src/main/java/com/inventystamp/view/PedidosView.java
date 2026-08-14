@@ -53,43 +53,49 @@ public class PedidosView {
         HBox cabecalhoPedidos = new HBox(14, titulo, lblContadorDtf);
         cabecalhoPedidos.setAlignment(Pos.CENTER_LEFT);
 
-        FlowPane filtros = new FlowPane(8, 8);
-        filtros.setAlignment(Pos.CENTER_LEFT);
+        Label lblFiltrarTitulo = new Label("Filtrar:");
+        lblFiltrarTitulo.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: white;");
 
-        CheckBox cbFiltroTodos = new CheckBox("Todos");
-        cbFiltroTodos.setSelected(true);
-        cbFiltroTodos.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;");
+        ToggleButton tbFiltroTodos = criarChipFiltro("Todos");
+        tbFiltroTodos.setSelected(true);
 
-        java.util.List<CheckBox> checkboxesTipo = new java.util.ArrayList<>();
+        java.util.List<ToggleButton> chipsTipo = new java.util.ArrayList<>();
         for (TipoPersonalizacao tipo : TipoPersonalizacao.values()) {
-            CheckBox cb = new CheckBox(tipo.name());
-            cb.setSelected(true);
-            cb.setStyle("-fx-font-size: 12px;");
-            cb.setOnAction(e -> {
-                if (cb.isSelected()) filtrosSelecionados.add(tipo);
+            ToggleButton chip = criarChipFiltro(tipo.name());
+            chip.setSelected(true);
+            chip.setOnAction(e -> {
+                if (chip.isSelected()) filtrosSelecionados.add(tipo);
                 else filtrosSelecionados.remove(tipo);
 
                 boolean todosMarcados = filtrosSelecionados.size() == TipoPersonalizacao.values().length;
-                cbFiltroTodos.setSelected(todosMarcados);
+                tbFiltroTodos.setSelected(todosMarcados);
 
                 carregarPedidos();
             });
-            checkboxesTipo.add(cb);
+            chipsTipo.add(chip);
         }
 
-        cbFiltroTodos.setOnAction(e -> {
-            boolean marcar = cbFiltroTodos.isSelected();
+        tbFiltroTodos.setOnAction(e -> {
+            boolean marcar = tbFiltroTodos.isSelected();
             filtrosSelecionados.clear();
-            for (CheckBox cb : checkboxesTipo) {
-                cb.setSelected(marcar);
-                if (marcar) filtrosSelecionados.add(TipoPersonalizacao.valueOf(cb.getText()));
+            for (ToggleButton chip : chipsTipo) {
+                chip.setSelected(marcar);
+                if (marcar) filtrosSelecionados.add(TipoPersonalizacao.valueOf(chip.getText()));
             }
             carregarPedidos();
         });
 
-        filtros.getChildren().add(new Label("Filtrar:"));
-        filtros.getChildren().add(cbFiltroTodos);
-        filtros.getChildren().addAll(checkboxesTipo);
+        FlowPane filtros = new FlowPane(8, 8);
+        filtros.setAlignment(Pos.CENTER_LEFT);
+        filtros.getChildren().add(lblFiltrarTitulo);
+        filtros.getChildren().add(tbFiltroTodos);
+        filtros.getChildren().addAll(chipsTipo);
+
+        VBox compartimentoFiltros = new VBox(filtros);
+        compartimentoFiltros.setPadding(new Insets(14));
+        compartimentoFiltros.setStyle(
+                "-fx-background-color: #2980b9; -fx-background-radius: 10;"
+        );
 
         TextField tfPesquisa = new TextField();
         tfPesquisa.setPromptText("🔍 Pesquisar por nome, código, data ou anotação...");
@@ -103,7 +109,7 @@ public class PedidosView {
             carregarPedidos();
         });
 
-        VBox linhaFiltrosEPesquisa = new VBox(10, filtros, tfPesquisa);
+        VBox linhaFiltrosEPesquisa = new VBox(10, compartimentoFiltros, tfPesquisa);
 
         gridPedidos = new GridPane();
         gridPedidos.setHgap(12);
@@ -626,5 +632,24 @@ public class PedidosView {
 
     public VBox getView() {
         return root;
+    }
+
+    private ToggleButton criarChipFiltro(String texto) {
+        ToggleButton tb = new ToggleButton(texto);
+        tb.setStyle(estiloChip(true));
+        tb.selectedProperty().addListener((obs, oldVal, novoValor) -> tb.setStyle(estiloChip(novoValor)));
+        return tb;
+    }
+
+    private String estiloChip(boolean selecionado) {
+        if (selecionado) {
+            return "-fx-background-color: white; -fx-text-fill: #2980b9; " +
+                    "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
+        } else {
+            return "-fx-background-color: rgba(255,255,255,0.25); -fx-text-fill: white; " +
+                    "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
+        }
     }
 }
