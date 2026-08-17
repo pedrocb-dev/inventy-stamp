@@ -24,6 +24,7 @@ public class AtendimentoView {
     private ComboBox<TipoPersonalizacao> cbTipo;
     private ComboBox<StatusPagamento> cbPagamento;
     private ComboBox<String> cbNF;
+    private ComboBox<String> cbNotinha;
     private ComboBox<String> cbAtendente;
     private ComboBox<String> cbTamanhoPedido;
     private DatePicker dpConfirmacao, dpEntrega;
@@ -223,8 +224,15 @@ public class AtendimentoView {
         cbNF.setMaxWidth(Double.MAX_VALUE);
         cbNF.setStyle("-fx-font-size: 14px;");
 
+        cbNotinha = new ComboBox<>();
+        cbNotinha.getItems().addAll("Não precisa de notinha", "Precisa de notinha");
+        cbNotinha.setValue("Não precisa de notinha");
+        cbNotinha.setMaxWidth(Double.MAX_VALUE);
+        cbNotinha.setStyle("-fx-font-size: 14px;");
+
         HBox linha5 = new HBox(12,
-                criarCampo("🧾 Nota Fiscal", cbNF)
+                criarCampo("🧾 Nota Fiscal", cbNF),
+                criarCampo("🧾 Notinha", cbNotinha)
         );
 
         cbAtendente = new ComboBox<>();
@@ -336,6 +344,7 @@ public class AtendimentoView {
             p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
             p.setAtendente(cbAtendente.getValue());
             p.setTamanhoPedido(cbTamanhoPedido.getValue());
+            p.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de notinha"));
 
             try {
                 if (!tfValor.getText().isBlank())
@@ -521,6 +530,7 @@ public class AtendimentoView {
         cbNF.setValue("Não precisa de NF");
         cbAtendente.setValue(null);
         cbTamanhoPedido.setValue(null);
+        cbNotinha.setValue("Não precisa de notinha");
         campoResta.setVisible(false);
         campoResta.setManaged(false);
     }

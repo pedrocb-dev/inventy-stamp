@@ -301,6 +301,17 @@ public class PedidosView {
         Label lblNF = new Label(p.isPrecisaNf() ? "🧾 Precisa de NF" : "");
         lblNF.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
 
+        // Notinha
+        Label lblNotinha = new Label(p.isPrecisaNotinha() ? "🧾 Precisa de notinha" : "");
+        lblNotinha.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
+
+// Atendente e tamanho do pedido
+        Label lblAtendente = new Label(p.getAtendente() != null ? "👩‍💼 Atendente: " + p.getAtendente() : "");
+        lblAtendente.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
+
+        Label lblTamanho = new Label(p.getTamanhoPedido() != null ? "📦 " + p.getTamanhoPedido() : "");
+        lblTamanho.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
+
         // Anotação completa
         Label lblAnotacao = new Label(p.getAnotacao() != null ? p.getAnotacao() : "");
         lblAnotacao.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
@@ -401,7 +412,7 @@ public class PedidosView {
         linhaNome.setAlignment(Pos.CENTER_LEFT);
 
 // Coluna esquerda — informações do pedido
-        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblNF);
+        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblNF, lblNotinha, lblAtendente, lblTamanho);
         colunaEsquerda.setPrefWidth(200);
         HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 
@@ -476,10 +487,28 @@ public class PedidosView {
         grid.add(new Label("Valor:"), 0, 5); grid.add(tfValor, 1, 5);
         grid.add(new Label("Pagamento:"), 0, 6); grid.add(cbPagamento, 1, 6);
         grid.add(lblResta, 0, 7); grid.add(tfResta, 1, 7);
+
         ComboBox<String> cbNF = new ComboBox<>();
         cbNF.getItems().addAll("Não precisa de NF", "Precisa de NF");
         cbNF.setValue(p.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
         grid.add(new Label("🧾 Nota Fiscal:"), 0, 8); grid.add(cbNF, 1, 8);
+
+        ComboBox<String> cbNotinha = new ComboBox<>();
+        cbNotinha.getItems().addAll("Não precisa de notinha", "Precisa de notinha");
+        cbNotinha.setValue(p.isPrecisaNotinha() ? "Precisa de notinha" : "Não precisa de notinha");
+        grid.add(new Label("🧾 Notinha:"), 0, 9); grid.add(cbNotinha, 1, 9);
+
+        ComboBox<String> cbAtendenteEdicao = new ComboBox<>();
+        cbAtendenteEdicao.getItems().addAll("Kennia", "Pedro", "Bia", "Marco");
+        cbAtendenteEdicao.setValue(p.getAtendente());
+        grid.add(new Label("👩‍💼 Atendente:"), 0, 10); grid.add(cbAtendenteEdicao, 1, 10);
+
+        ComboBox<String> cbTamanhoEdicao = new ComboBox<>();
+        cbTamanhoEdicao.getItems().addAll(
+                "Pequeno (até 10)", "Médio (até 30)", "Grande (até 50)", "Bem grande (mais de 50)"
+        );
+        cbTamanhoEdicao.setValue(p.getTamanhoPedido());
+        grid.add(new Label("📦 Tamanho:"), 0, 11); grid.add(cbTamanhoEdicao, 1, 11);
 
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -498,6 +527,9 @@ public class PedidosView {
                         p.setResta(new java.math.BigDecimal(tfResta.getText()));
                 } catch (Exception ex) {}
                 p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
+                p.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de notinha"));
+                p.setAtendente(cbAtendenteEdicao.getValue());
+                p.setTamanhoPedido(cbTamanhoEdicao.getValue());
                 return p;
             }
             return null;
@@ -545,6 +577,12 @@ public class PedidosView {
         linhas.add("Prazo: " + p.getDataEntrega().format(fmt));
         linhas.add("Tipo: " + p.getTipoPersonalizacao().name());
         linhas.add("Pagamento: " + p.getStatusPagamento().name());
+        if (p.getAtendente() != null && !p.getAtendente().isBlank())
+            linhas.add("Atendente: " + p.getAtendente());
+        if (p.getTamanhoPedido() != null && !p.getTamanhoPedido().isBlank())
+            linhas.add("Tamanho: " + p.getTamanhoPedido());
+        if (p.isPrecisaNotinha())
+            linhas.add("Precisa de notinha");
         if (p.getValor() != null)
             linhas.add("Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
         if (p.getResta() != null && p.getStatusPagamento() == StatusPagamento.PARCIAL)

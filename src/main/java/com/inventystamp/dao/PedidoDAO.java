@@ -30,8 +30,8 @@ public class PedidoDAO {
 
     public void salvar(Pedido p) {
         String sql = "INSERT INTO pedidos (cliente_nome, cliente_telefone, anotacao, tipo_personalizacao, " +
-                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado, atendente, tamanho_pedido) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado, atendente, tamanho_pedido, precisa_notinha) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -50,6 +50,7 @@ public class PedidoDAO {
             ps.setBoolean(12, p.isDtfMontado());
             ps.setString(13, p.getAtendente());
             ps.setString(14, p.getTamanhoPedido());
+            ps.setBoolean(15, p.isPrecisaNotinha());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -63,7 +64,7 @@ public class PedidoDAO {
 
     public void atualizar(Pedido p) {
         String sql = "UPDATE pedidos SET cliente_nome=?, cliente_telefone=?, anotacao=?, tipo_personalizacao=?, " +
-                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, tamanho_pedido=? WHERE id=?";
+                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, tamanho_pedido=?, precisa_notinha=? WHERE id=?";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -83,7 +84,8 @@ public class PedidoDAO {
             ps.setBoolean(13, p.isDtfMontado());
             ps.setString(14, p.getAtendente());
             ps.setString(15, p.getTamanhoPedido());
-            ps.setInt(16, p.getId());
+            ps.setBoolean(16, p.isPrecisaNotinha());
+            ps.setInt(17, p.getId());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -123,6 +125,7 @@ public class PedidoDAO {
         p.setDtfMontado(rs.getBoolean("dtf_montado"));
         p.setAtendente(rs.getString("atendente"));
         p.setTamanhoPedido(rs.getString("tamanho_pedido"));
+        p.setPrecisaNotinha(rs.getBoolean("precisa_notinha"));
         p.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
         return p;
     }

@@ -22,6 +22,7 @@ public class Pedido {
     private boolean dtfMontado;
     private String atendente;
     private String tamanhoPedido;
+    private boolean precisaNotinha;
 
     public Pedido() {}
 
@@ -75,4 +76,7 @@ public class Pedido {
 
     public String getTamanhoPedido() { return tamanhoPedido; }
     public void setTamanhoPedido(String tamanhoPedido) { this.tamanhoPedido = tamanhoPedido; }
+
+    public boolean isPrecisaNotinha() { return precisaNotinha; }
+    public void setPrecisaNotinha(boolean precisaNotinha) { this.precisaNotinha = precisaNotinha; }
 }
