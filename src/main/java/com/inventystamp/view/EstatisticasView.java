@@ -169,20 +169,24 @@ public class EstatisticasView {
                 lucroLiquido.setScale(2, RoundingMode.HALF_UP));
         lblLucroLiquido.setStyle("-fx-font-size: 15px; -fx-text-fill: #2980b9; -fx-font-weight: bold;");
 
+        Label lblTotalGastos = new Label("💸 Total de Gastos: R$ " +
+                totalGastos.setScale(2, RoundingMode.HALF_UP));
+        lblTotalGastos.setStyle("-fx-font-size: 15px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+
         // Botão adicionar gasto
         Button btnAdicionarGasto = new Button("➕ Adicionar Gasto");
         btnAdicionarGasto.setStyle(
                 "-fx-background-color: #e67e22; -fx-text-fill: white; " +
                         "-fx-background-radius: 6; -fx-font-size: 13px;"
         );
-        btnAdicionarGasto.setOnAction(ev -> abrirDialogGasto(e, lblLucroLiquido, gastos));
+        btnAdicionarGasto.setOnAction(ev -> abrirDialogGasto(e, lblLucroLiquido, lblTotalGastos, gastos));
 
         // Lista de gastos
         VBox listaGastos = new VBox(6);
         listaGastos.setPadding(new Insets(8, 0, 0, 0));
-        atualizarListaGastos(listaGastos, gastos, e, lblLucroLiquido);
+        atualizarListaGastos(listaGastos, gastos, e, lblLucroLiquido, lblTotalGastos);
 
-        HBox rodape = new HBox(20, lblLucroBruto, lblLucroLiquido, btnAdicionarGasto);
+        HBox rodape = new HBox(20, lblLucroBruto, lblLucroLiquido, lblTotalGastos, btnAdicionarGasto);
         rodape.setAlignment(Pos.CENTER_LEFT);
 
         cardAtual.getChildren().addAll(
@@ -194,7 +198,7 @@ public class EstatisticasView {
         );
     }
 
-    private void abrirDialogGasto(EstatisticasMes e, Label lblLucroLiquido, List<Gasto> gastos) {
+    private void abrirDialogGasto(EstatisticasMes e, Label lblLucroLiquido, Label lblTotalGastos, List<Gasto> gastos) {
         Dialog<Gasto> dialog = new Dialog<>();
         dialog.setTitle("Adicionar Gasto");
 
@@ -234,19 +238,20 @@ public class EstatisticasView {
             dao.adicionarGasto(g);
             gastos.add(g);
 
-            BigDecimal totalGastos = gastos.stream()
+            BigDecimal totalGastosAtualizado = gastos.stream()
                     .map(Gasto::getValor)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal lucroLiquido = e.getLucroBruto().subtract(totalGastos);
+            BigDecimal lucroLiquido = e.getLucroBruto().subtract(totalGastosAtualizado);
             lblLucroLiquido.setText("💵 Lucro Líquido: R$ " + lucroLiquido.setScale(2, RoundingMode.HALF_UP));
+            lblTotalGastos.setText("💸 Total de Gastos: R$ " + totalGastosAtualizado.setScale(2, RoundingMode.HALF_UP));
 
             VBox listaGastos = (VBox) lblLucroLiquido.getParent().getParent().getChildrenUnmodifiable()
                     .stream().filter(n -> n instanceof VBox).findFirst().orElse(null);
-            if (listaGastos != null) atualizarListaGastos(listaGastos, gastos, e, lblLucroLiquido);
+            if (listaGastos != null) atualizarListaGastos(listaGastos, gastos, e, lblLucroLiquido, lblTotalGastos);
         });
     }
 
-    private void atualizarListaGastos(VBox listaGastos, List<Gasto> gastos, EstatisticasMes e, Label lblLucroLiquido) {
+    private void atualizarListaGastos(VBox listaGastos, List<Gasto> gastos, EstatisticasMes e, Label lblLucroLiquido, Label lblTotalGastos) {
         listaGastos.getChildren().clear();
 
         if (gastos.isEmpty()) {
@@ -280,13 +285,14 @@ public class EstatisticasView {
                 dao.deletarGasto(g.getId());
                 gastos.remove(g);
 
-                BigDecimal totalGastos = gastos.stream()
+                BigDecimal totalGastosAtualizado = gastos.stream()
                         .map(Gasto::getValor)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal lucroLiquido = e.getLucroBruto().subtract(totalGastos);
+                BigDecimal lucroLiquido = e.getLucroBruto().subtract(totalGastosAtualizado);
                 lblLucroLiquido.setText("💵 Lucro Líquido: R$ " + lucroLiquido.setScale(2, RoundingMode.HALF_UP));
+                lblTotalGastos.setText("💸 Total de Gastos: R$ " + totalGastosAtualizado.setScale(2, RoundingMode.HALF_UP));
 
-                atualizarListaGastos(listaGastos, gastos, e, lblLucroLiquido);
+                atualizarListaGastos(listaGastos, gastos, e, lblLucroLiquido, lblTotalGastos);
             });
 
             linha.getChildren().addAll(lblGasto, spacer, btnRemover);
