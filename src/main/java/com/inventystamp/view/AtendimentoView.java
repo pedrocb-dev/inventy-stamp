@@ -315,11 +315,15 @@ public class AtendimentoView {
         lblSugestao3.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         lblSugestao3.setWrapText(true);
 
-        Label lblSugestao4 = new Label("Tamanhos: Pequeno até 10, Médio até 30, Grande até 50, Bem grande mais de 50.");
+        Label lblSugestao4 = new Label("Marcar os tamanhos de pedido: \nPequeno até 10 peças\nMédio até 30 peças\nGrande até 50 peças\nBem grande mais de 50 peças");
         lblSugestao4.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         lblSugestao4.setWrapText(true);
 
-        sugestoesCard.getChildren().addAll(lblSugestoesTitulo, lblSugestao1, lblSugestao2, lblSugestao3, lblSugestao4);
+        Label lblSugestao5 = new Label("Mostrar ao cliente a diferença entre estampa e bordado.");
+        lblSugestao5.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        lblSugestao5.setWrapText(true);
+
+        sugestoesCard.getChildren().addAll(lblSugestoesTitulo, lblSugestao1, lblSugestao2, lblSugestao3, lblSugestao4, lblSugestao5);
 
         HBox botaoBox = new HBox(10, btnSalvar, btnSalvarRascunho);
         botaoBox.setAlignment(Pos.CENTER_LEFT);
