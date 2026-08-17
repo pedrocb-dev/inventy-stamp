@@ -559,7 +559,7 @@ public class PedidosView {
         LocalDate hoje = LocalDate.now();
         if (dataEntrega.isBefore(hoje)) return "#000000";
         if (dataEntrega.isEqual(hoje)) return "#e74c3c";
-        if (dataEntrega.isEqual(hoje.plusDays(1))) return "#f39c12";
+        if (dataEntrega.isEqual(hoje.plusDays(1)) || dataEntrega.isEqual(hoje.plusDays(2))) return "#f39c12";
         return "#27ae60";
     }
 
