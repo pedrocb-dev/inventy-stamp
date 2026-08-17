@@ -14,6 +14,8 @@ public class RascunhoPedido {
     private String statusPagamento;
     private String resta;
     private boolean precisaNf;
+    private String atendente;
+    private String tamanhoPedido;
     private LocalDateTime criadoEm;
 
     public RascunhoPedido() {}
@@ -50,6 +52,12 @@ public class RascunhoPedido {
 
     public boolean isPrecisaNf() { return precisaNf; }
     public void setPrecisaNf(boolean precisaNf) { this.precisaNf = precisaNf; }
+
+    public String getAtendente() { return atendente; }
+    public void setAtendente(String atendente) { this.atendente = atendente; }
+
+    public String getTamanhoPedido() { return tamanhoPedido; }
+    public void setTamanhoPedido(String tamanhoPedido) { this.tamanhoPedido = tamanhoPedido; }
 
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }

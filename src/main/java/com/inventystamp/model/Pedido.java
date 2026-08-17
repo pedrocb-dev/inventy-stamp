@@ -20,6 +20,8 @@ public class Pedido {
     private LocalDateTime criadoEm;
     private boolean precisaNf;
     private boolean dtfMontado;
+    private String atendente;
+    private String tamanhoPedido;
 
     public Pedido() {}
 
@@ -67,4 +69,10 @@ public class Pedido {
 
     public boolean isDtfMontado() { return dtfMontado; }
     public void setDtfMontado(boolean dtfMontado) { this.dtfMontado = dtfMontado; }
+
+    public String getAtendente() { return atendente; }
+    public void setAtendente(String atendente) { this.atendente = atendente; }
+
+    public String getTamanhoPedido() { return tamanhoPedido; }
+    public void setTamanhoPedido(String tamanhoPedido) { this.tamanhoPedido = tamanhoPedido; }
 }

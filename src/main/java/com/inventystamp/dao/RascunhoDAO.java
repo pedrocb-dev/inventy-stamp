@@ -28,8 +28,8 @@ public class RascunhoDAO {
 
     public void salvar(RascunhoPedido r) {
         String sql = "INSERT INTO rascunhos_pedido (cliente_nome, cliente_telefone, anotacao, " +
-                "tipo_personalizacao, data_confirmacao, data_entrega, valor, status_pagamento, resta, precisa_nf) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "tipo_personalizacao, data_confirmacao, data_entrega, valor, status_pagamento, resta, precisa_nf, atendente, tamanho_pedido) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -44,8 +44,9 @@ public class RascunhoDAO {
             ps.setString(8, r.getStatusPagamento());
             ps.setString(9, r.getResta());
             ps.setBoolean(10, r.isPrecisaNf());
+            ps.setString(11, r.getAtendente());
+            ps.setString(12, r.getTamanhoPedido());
             ps.executeUpdate();
-
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) r.setId(rs.getInt(1));
 
@@ -81,6 +82,8 @@ public class RascunhoDAO {
         r.setStatusPagamento(rs.getString("status_pagamento"));
         r.setResta(rs.getString("resta"));
         r.setPrecisaNf(rs.getBoolean("precisa_nf"));
+        r.setAtendente(rs.getString("atendente"));
+        r.setTamanhoPedido(rs.getString("tamanho_pedido"));
         r.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
         return r;
     }

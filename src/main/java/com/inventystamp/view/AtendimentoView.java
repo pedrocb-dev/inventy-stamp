@@ -24,6 +24,8 @@ public class AtendimentoView {
     private ComboBox<TipoPersonalizacao> cbTipo;
     private ComboBox<StatusPagamento> cbPagamento;
     private ComboBox<String> cbNF;
+    private ComboBox<String> cbAtendente;
+    private ComboBox<String> cbTamanhoPedido;
     private DatePicker dpConfirmacao, dpEntrega;
     private VBox campoResta;
     private VBox listaRascunhos;
@@ -225,6 +227,25 @@ public class AtendimentoView {
                 criarCampo("🧾 Nota Fiscal", cbNF)
         );
 
+        cbAtendente = new ComboBox<>();
+        cbAtendente.getItems().addAll("Kennia", "Pedro", "Bia", "Marco");
+        cbAtendente.setPromptText("Selecione...");
+        cbAtendente.setMaxWidth(Double.MAX_VALUE);
+        cbAtendente.setStyle("-fx-font-size: 14px;");
+
+        cbTamanhoPedido = new ComboBox<>();
+        cbTamanhoPedido.getItems().addAll(
+                "Pequeno (até 10)", "Médio (até 30)", "Grande (até 50)", "Bem grande (mais de 50)"
+        );
+        cbTamanhoPedido.setPromptText("Selecione...");
+        cbTamanhoPedido.setMaxWidth(Double.MAX_VALUE);
+        cbTamanhoPedido.setStyle("-fx-font-size: 14px;");
+
+        HBox linha6 = new HBox(12,
+                criarCampo("👩‍💼 Atendente", cbAtendente),
+                criarCampo("📦 Tamanho do pedido", cbTamanhoPedido)
+        );
+
         Label lblFeedback = new Label();
         lblFeedback.setStyle("-fx-font-size: 14px;");
 
@@ -286,7 +307,11 @@ public class AtendimentoView {
         lblSugestao3.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         lblSugestao3.setWrapText(true);
 
-        sugestoesCard.getChildren().addAll(lblSugestoesTitulo, lblSugestao1, lblSugestao2, lblSugestao3);
+        Label lblSugestao4 = new Label("Tamanhos: Pequeno até 10, Médio até 30, Grande até 50, Bem grande mais de 50.");
+        lblSugestao4.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        lblSugestao4.setWrapText(true);
+
+        sugestoesCard.getChildren().addAll(lblSugestoesTitulo, lblSugestao1, lblSugestao2, lblSugestao3, lblSugestao4);
 
         HBox botaoBox = new HBox(10, btnSalvar, btnSalvarRascunho);
         botaoBox.setAlignment(Pos.CENTER_LEFT);
@@ -309,6 +334,8 @@ public class AtendimentoView {
             p.setStatusPagamento(cbPagamento.getValue());
             p.setSituacao(SituacaoPedido.PREPARANDO);
             p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
+            p.setAtendente(cbAtendente.getValue());
+            p.setTamanhoPedido(cbTamanhoPedido.getValue());
 
             try {
                 if (!tfValor.getText().isBlank())
@@ -338,7 +365,7 @@ public class AtendimentoView {
 
         container.getChildren().addAll(formCard, sugestoesCard);
 
-        formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4, linha5);
+        formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4, linha5, linha6);
 
         VBox bottomBox = new VBox(10, botaoBox, lblFeedback);
         bottomBox.setMaxWidth(620 + 280 + 20);
@@ -474,6 +501,8 @@ public class AtendimentoView {
         tfValor.setText(r.getValor() != null ? r.getValor() : "");
         tfResta.setText(r.getResta() != null ? r.getResta() : "");
         cbNF.setValue(r.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
+        cbAtendente.setValue(r.getAtendente());
+        cbTamanhoPedido.setValue(r.getTamanhoPedido());
 
         rascunhoDAO.deletar(r.getId());
         carregarRascunhos();
@@ -490,6 +519,8 @@ public class AtendimentoView {
         tfResta.clear();
         cbPagamento.setValue(null);
         cbNF.setValue("Não precisa de NF");
+        cbAtendente.setValue(null);
+        cbTamanhoPedido.setValue(null);
         campoResta.setVisible(false);
         campoResta.setManaged(false);
     }
@@ -536,6 +567,8 @@ public class AtendimentoView {
         r.setStatusPagamento(cbPagamento.getValue() != null ? cbPagamento.getValue().name() : null);
         r.setResta(tfResta.getText().trim());
         r.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
+        r.setAtendente(cbAtendente.getValue());
+        r.setTamanhoPedido(cbTamanhoPedido.getValue());
         return r;
     }
 
