@@ -378,6 +378,13 @@ public class PedidosView {
                     case SEM_PERSONALIZACAO -> est.setLucroSemPersonalizacao(p.getValor());
                 }
 
+                if (p.getTamanhoPedido() != null) {
+                    if (p.getTamanhoPedido().startsWith("Pequeno")) est.setQtdPequeno(1);
+                    else if (p.getTamanhoPedido().startsWith("Médio")) est.setQtdMedio(1);
+                    else if (p.getTamanhoPedido().startsWith("Grande")) est.setQtdGrande(1);
+                    else if (p.getTamanhoPedido().startsWith("Bem grande")) est.setQtdBemGrande(1);
+                }
+
                 estatisticaDAO.salvarOuAtualizar(est);
             }
 

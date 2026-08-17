@@ -14,6 +14,10 @@ public class EstatisticasMes {
     private BigDecimal lucroTransfer;
     private BigDecimal lucroSilkscreen;
     private BigDecimal lucroSemPersonalizacao;
+    private int qtdPequeno;
+    private int qtdMedio;
+    private int qtdGrande;
+    private int qtdBemGrande;
 
     public EstatisticasMes() {}
 
@@ -49,4 +53,16 @@ public class EstatisticasMes {
 
     public BigDecimal getLucroSemPersonalizacao() { return lucroSemPersonalizacao != null ? lucroSemPersonalizacao : BigDecimal.ZERO; }
     public void setLucroSemPersonalizacao(BigDecimal lucroSemPersonalizacao) { this.lucroSemPersonalizacao = lucroSemPersonalizacao; }
+
+    public int getQtdPequeno() { return qtdPequeno; }
+    public void setQtdPequeno(int qtdPequeno) { this.qtdPequeno = qtdPequeno; }
+
+    public int getQtdMedio() { return qtdMedio; }
+    public void setQtdMedio(int qtdMedio) { this.qtdMedio = qtdMedio; }
+
+    public int getQtdGrande() { return qtdGrande; }
+    public void setQtdGrande(int qtdGrande) { this.qtdGrande = qtdGrande; }
+
+    public int getQtdBemGrande() { return qtdBemGrande; }
+    public void setQtdBemGrande(int qtdBemGrande) { this.qtdBemGrande = qtdBemGrande; }
 }

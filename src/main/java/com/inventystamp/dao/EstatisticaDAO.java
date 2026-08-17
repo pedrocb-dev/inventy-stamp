@@ -27,8 +27,9 @@ public class EstatisticaDAO {
 
     public void salvarOuAtualizar(EstatisticasMes e) {
         String sql = "INSERT INTO estatisticas_mes (ano, mes, lucro_bruto, lucro_bordado, lucro_dtf, " +
-                "lucro_plotter, lucro_sublimacao, lucro_transfer, lucro_silkscreen, lucro_sem_personalizacao) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
+                "lucro_plotter, lucro_sublimacao, lucro_transfer, lucro_silkscreen, lucro_sem_personalizacao, " +
+                "qtd_pequeno, qtd_medio, qtd_grande, qtd_bem_grande) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
                 "lucro_bruto = lucro_bruto + VALUES(lucro_bruto), " +
                 "lucro_bordado = lucro_bordado + VALUES(lucro_bordado), " +
                 "lucro_dtf = lucro_dtf + VALUES(lucro_dtf), " +
@@ -36,7 +37,11 @@ public class EstatisticaDAO {
                 "lucro_sublimacao = lucro_sublimacao + VALUES(lucro_sublimacao), " +
                 "lucro_transfer = lucro_transfer + VALUES(lucro_transfer), " +
                 "lucro_silkscreen = lucro_silkscreen + VALUES(lucro_silkscreen), " +
-                "lucro_sem_personalizacao = lucro_sem_personalizacao + VALUES(lucro_sem_personalizacao)";
+                "lucro_sem_personalizacao = lucro_sem_personalizacao + VALUES(lucro_sem_personalizacao), " +
+                "qtd_pequeno = qtd_pequeno + VALUES(qtd_pequeno), " +
+                "qtd_medio = qtd_medio + VALUES(qtd_medio), " +
+                "qtd_grande = qtd_grande + VALUES(qtd_grande), " +
+                "qtd_bem_grande = qtd_bem_grande + VALUES(qtd_bem_grande)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -50,6 +55,10 @@ public class EstatisticaDAO {
             ps.setBigDecimal(8, e.getLucroTransfer());
             ps.setBigDecimal(9, e.getLucroSilkscreen());
             ps.setBigDecimal(10, e.getLucroSemPersonalizacao());
+            ps.setInt(11, e.getQtdPequeno());
+            ps.setInt(12, e.getQtdMedio());
+            ps.setInt(13, e.getQtdGrande());
+            ps.setInt(14, e.getQtdBemGrande());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -134,6 +143,10 @@ public class EstatisticaDAO {
         e.setLucroTransfer(rs.getBigDecimal("lucro_transfer"));
         e.setLucroSilkscreen(rs.getBigDecimal("lucro_silkscreen"));
         e.setLucroSemPersonalizacao(rs.getBigDecimal("lucro_sem_personalizacao"));
+        e.setQtdPequeno(rs.getInt("qtd_pequeno"));
+        e.setQtdMedio(rs.getInt("qtd_medio"));
+        e.setQtdGrande(rs.getInt("qtd_grande"));
+        e.setQtdBemGrande(rs.getInt("qtd_bem_grande"));
         return e;
     }
 }
