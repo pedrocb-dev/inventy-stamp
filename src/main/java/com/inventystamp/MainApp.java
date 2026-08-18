@@ -10,7 +10,6 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import com.inventystamp.view.PedidosView;
 import com.inventystamp.view.AtendimentoView;
-import com.inventystamp.view.DemandasView;
 import com.inventystamp.view.EstatisticasView;
 import javafx.scene.control.*;
 
@@ -30,12 +29,10 @@ public class MainApp extends Application {
 
         Button btnAtender = criarBotao("🎧 Atender");
         Button btnPedidos = criarBotao("📋 Ver Pedidos");
-        Button btnDemandar = criarBotao("📢 Demandar");
         Button btnEstatisticas = criarBotao("📊 Estatísticas");
 
         btnAtender.setOnAction(e -> mostrarTela(stage, "atendimento"));
         btnPedidos.setOnAction(e -> mostrarTela(stage, "pedidos"));
-        btnDemandar.setOnAction(e -> mostrarTela(stage, "demandas"));
         btnEstatisticas.setOnAction(e -> {
             TextInputDialog dialog = new TextInputDialog();
             dialog.setTitle("Acesso Restrito");
@@ -63,7 +60,7 @@ public class MainApp extends Application {
             dialog.showAndWait().ifPresent(ignored -> mostrarTela(stage, "estatisticas"));
         });
 
-        VBox botoes = new VBox(12, btnAtender, btnPedidos, btnDemandar, btnEstatisticas);
+        VBox botoes = new VBox(12, btnAtender, btnPedidos, btnEstatisticas);
         botoes.setAlignment(Pos.CENTER);
 
         VBox root = new VBox(20, titulo, subtitulo, botoes);
@@ -108,10 +105,6 @@ public class MainApp extends Application {
                     sairDoAtendimentoSeNecessario.run();
                     conteudo.getChildren().setAll(new PedidosView().getView());
                 }),
-                criarBotaoMenu("📢 Demandar", () -> {
-                    sairDoAtendimentoSeNecessario.run();
-                    conteudo.getChildren().setAll(new DemandasView().getView());
-                }),
                 criarBotaoMenu("📊 Estatísticas", () -> {
                     sairDoAtendimentoSeNecessario.run();
                     TextInputDialog dialog = new TextInputDialog();
@@ -142,7 +135,6 @@ public class MainApp extends Application {
         switch (tela) {
             case "atendimento" -> abrirAtendimento.run();
             case "pedidos" -> conteudo.getChildren().setAll(new PedidosView().getView());
-            case "demandas" -> conteudo.getChildren().setAll(new DemandasView().getView());
             case "estatisticas" -> conteudo.getChildren().setAll(new EstatisticasView().getView());
         }
 

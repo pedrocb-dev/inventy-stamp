@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.math.BigDecimal;
+import com.inventystamp.dao.DemandaPedidoDAO;
+import com.inventystamp.model.DemandaPedido;
 
 public class AtendimentoView {
 
@@ -25,6 +27,8 @@ public class AtendimentoView {
     private ComboBox<StatusPagamento> cbPagamento;
     private ComboBox<String> cbNF;
     private ComboBox<String> cbNotinha;
+    private TextArea taDemanda;
+    private ToggleButton tbMarco, tbSimone;
     private ComboBox<String> cbAtendente;
     private ComboBox<String> cbTamanhoPedido;
     private DatePicker dpConfirmacao, dpEntrega;
@@ -315,7 +319,7 @@ public class AtendimentoView {
         lblSugestao3.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         lblSugestao3.setWrapText(true);
 
-        Label lblSugestao4 = new Label("Marcar os tamanhos de pedido: \nPequeno até 10 peças\nMédio até 30 peças\nGrande até 50 peças\nBem grande mais de 50 peças");
+        Label lblSugestao4 = new Label("Tamanhos: Pequeno até 10, Médio até 30, Grande até 50, Bem grande mais de 50.");
         lblSugestao4.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         lblSugestao4.setWrapText(true);
 
@@ -324,6 +328,41 @@ public class AtendimentoView {
         lblSugestao5.setWrapText(true);
 
         sugestoesCard.getChildren().addAll(lblSugestoesTitulo, lblSugestao1, lblSugestao2, lblSugestao3, lblSugestao4, lblSugestao5);
+
+// Container de demanda
+        VBox demandaCard = new VBox(12);
+        demandaCard.setPadding(new Insets(24));
+        demandaCard.setPrefWidth(280);
+        demandaCard.setMinWidth(280);
+        demandaCard.setMaxWidth(280);
+        demandaCard.setAlignment(Pos.TOP_LEFT);
+        demandaCard.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 10; " +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);"
+        );
+
+        Label lblDemandaTitulo = new Label("📢 Demandar (opcional)");
+        lblDemandaTitulo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        taDemanda = new TextArea();
+        taDemanda.setPromptText("Escreva a demanda relacionada a este pedido...");
+        taDemanda.setPrefRowCount(4);
+        taDemanda.setStyle(
+                "-fx-font-size: 13px; -fx-background-radius: 6; " +
+                        "-fx-border-color: #dcdde1; -fx-border-radius: 6;"
+        );
+
+        tbMarco = new ToggleButton("Marco");
+        tbSimone = new ToggleButton("Simone");
+        ToggleGroup grupoDestinatario = new ToggleGroup();
+        tbMarco.setToggleGroup(grupoDestinatario);
+        tbSimone.setToggleGroup(grupoDestinatario);
+        tbMarco.setStyle("-fx-font-size: 13px; -fx-pref-width: 110;");
+        tbSimone.setStyle("-fx-font-size: 13px; -fx-pref-width: 110;");
+
+        HBox linhaDestinatarios = new HBox(8, tbMarco, tbSimone);
+
+        demandaCard.getChildren().addAll(lblDemandaTitulo, taDemanda, linhaDestinatarios);
 
         HBox botaoBox = new HBox(10, btnSalvar, btnSalvarRascunho);
         botaoBox.setAlignment(Pos.CENTER_LEFT);
@@ -370,13 +409,23 @@ public class AtendimentoView {
 
             pedidoDAO.salvar(p);
 
+            if (!taDemanda.getText().isBlank() && (tbMarco.isSelected() || tbSimone.isSelected())) {
+                DemandaPedidoDAO demandaDAO = new DemandaPedidoDAO();
+                DemandaPedido demanda = new DemandaPedido();
+                demanda.setPedidoId(p.getId());
+                demanda.setDestinatario(tbMarco.isSelected() ? "MARCO" : "SIMONE");
+                demanda.setTexto(taDemanda.getText().trim());
+                demandaDAO.salvar(demanda);
+            }
+
             limparFormulario();
 
             lblFeedback.setText("✅ Pedido salvo com sucesso!");
             lblFeedback.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 14px;");
         });
 
-        container.getChildren().addAll(formCard, sugestoesCard);
+        VBox colunaLateral = new VBox(20, sugestoesCard, demandaCard);
+        container.getChildren().addAll(formCard, colunaLateral);
 
         formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4, linha5, linha6);
 
@@ -479,7 +528,7 @@ public class AtendimentoView {
 
     private void carregarRascunhoNoFormulario(RascunhoPedido r) {
         // Se já tem algo sendo digitado, salva como rascunho antes de sobrescrever
-        boolean temConteudoAtual = !tfNome.getText().isBlank() || !taAnotacao.getText().isBlank();
+        boolean temConteudoAtual = !tfNome.getText().isBlank() || !taAnotacao.getText().isBlank() || !taDemanda.getText().isBlank();
         if (temConteudoAtual) {
             rascunhoDAO.salvar(montarRascunhoAtual());
         }
@@ -516,6 +565,9 @@ public class AtendimentoView {
         cbNF.setValue(r.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
         cbAtendente.setValue(r.getAtendente());
         cbTamanhoPedido.setValue(r.getTamanhoPedido());
+        taDemanda.setText(r.getDemandaTexto() != null ? r.getDemandaTexto() : "");
+        tbMarco.setSelected("MARCO".equals(r.getDemandaDestinatario()));
+        tbSimone.setSelected("SIMONE".equals(r.getDemandaDestinatario()));
 
         rascunhoDAO.deletar(r.getId());
         carregarRascunhos();
@@ -534,9 +586,11 @@ public class AtendimentoView {
         cbNF.setValue("Não precisa de NF");
         cbAtendente.setValue(null);
         cbTamanhoPedido.setValue(null);
-        cbNotinha.setValue("Não precisa de notinha");
         campoResta.setVisible(false);
         campoResta.setManaged(false);
+        taDemanda.clear();
+        tbMarco.setSelected(false);
+        tbSimone.setSelected(false);
     }
 
     private VBox criarCampo(String labelTexto, javafx.scene.Node campo) {
@@ -583,11 +637,13 @@ public class AtendimentoView {
         r.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
         r.setAtendente(cbAtendente.getValue());
         r.setTamanhoPedido(cbTamanhoPedido.getValue());
+        r.setDemandaTexto(taDemanda.getText().trim());
+        r.setDemandaDestinatario(tbMarco.isSelected() ? "MARCO" : tbSimone.isSelected() ? "SIMONE" : null);
         return r;
     }
 
     public void salvarRascunhoAutomatico() {
-        boolean temConteudo = !tfNome.getText().isBlank() || !taAnotacao.getText().isBlank();
+        boolean temConteudo = !tfNome.getText().isBlank() || !taAnotacao.getText().isBlank() || !taDemanda.getText().isBlank();
         if (temConteudo) {
             rascunhoDAO.salvar(montarRascunhoAtual());
         }

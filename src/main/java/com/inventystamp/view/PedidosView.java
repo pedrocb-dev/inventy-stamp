@@ -1,6 +1,8 @@
 package com.inventystamp.view;
 
 import com.inventystamp.dao.PedidoDAO;
+import com.inventystamp.dao.DemandaPedidoDAO;
+import com.inventystamp.dao.EstatisticaDAO;
 import com.inventystamp.model.*;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
@@ -8,25 +10,31 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
+
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import com.inventystamp.dao.EstatisticaDAO;
-import com.inventystamp.model.EstatisticasMes;
-import java.math.BigDecimal;
-import javax.print.*;
-import javax.print.attribute.*;
-import javax.print.attribute.standard.*;
 
 public class PedidosView {
 
     private final PedidoDAO pedidoDAO = new PedidoDAO();
-    private GridPane gridPedidos;
+    private final DemandaPedidoDAO demandaPedidoDAO = new DemandaPedidoDAO();
+
     private VBox root;
-    private String textoPesquisa = "";
+    private StackPane conteudoPaginas;
+    private GridPane gridPedidos;
+    private GridPane gridDemandas;
+    private Button btnAbaPedidos, btnAbaDemandas;
     private Label lblContadorDtf;
+    private Label lblContadorDemandas;
+
+    private String textoPesquisa = "";
+    private String textoPesquisaDemanda = "";
     private final java.util.Set<TipoPersonalizacao> filtrosSelecionados = new java.util.HashSet<>();
+    private final java.util.Set<String> filtrosDemandaSelecionados = new java.util.HashSet<>();
+
     private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public PedidosView() {
@@ -37,6 +45,83 @@ public class PedidosView {
         root = new VBox(15);
         root.setPadding(new Insets(20));
         root.setStyle("-fx-background-color: #e8eaed;");
+
+        btnAbaPedidos = new Button("📋 Pedidos");
+        btnAbaDemandas = new Button("📢 Demandas");
+
+        lblContadorDemandas = new Label();
+        lblContadorDemandas.setStyle(
+                "-fx-font-size: 11px; -fx-text-fill: white; -fx-font-weight: bold; " +
+                        "-fx-background-color: #e67e22; -fx-background-radius: 20; -fx-padding: 2 8 2 8;"
+        );
+        lblContadorDemandas.setVisible(false);
+        lblContadorDemandas.setManaged(false);
+
+        HBox abaDemandasBox = new HBox(6, btnAbaDemandas, lblContadorDemandas);
+        abaDemandasBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox abas = new HBox(10, btnAbaPedidos, abaDemandasBox);
+        abas.setAlignment(Pos.CENTER_LEFT);
+
+        conteudoPaginas = new StackPane();
+
+        VBox paginaPedidos = construirPaginaPedidos();
+        VBox paginaDemandas = construirPaginaDemandas();
+
+        conteudoPaginas.getChildren().addAll(paginaPedidos, paginaDemandas);
+        paginaDemandas.setVisible(false);
+        paginaDemandas.setManaged(false);
+
+        btnAbaPedidos.setOnAction(e -> {
+            paginaPedidos.setVisible(true);
+            paginaPedidos.setManaged(true);
+            paginaDemandas.setVisible(false);
+            paginaDemandas.setManaged(false);
+            atualizarEstiloAbas(true);
+        });
+
+        btnAbaDemandas.setOnAction(e -> {
+            paginaPedidos.setVisible(false);
+            paginaPedidos.setManaged(false);
+            paginaDemandas.setVisible(true);
+            paginaDemandas.setManaged(true);
+            atualizarEstiloAbas(false);
+            carregarDemandas();
+        });
+
+        atualizarEstiloAbas(true);
+
+        VBox.setVgrow(conteudoPaginas, Priority.ALWAYS);
+        root.getChildren().addAll(abas, conteudoPaginas);
+
+        carregarPedidos();
+        carregarDemandas();
+
+        javafx.animation.Timeline autoRefresh = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.minutes(1), e -> {
+                    carregarPedidos();
+                    carregarDemandas();
+                })
+        );
+        autoRefresh.setCycleCount(javafx.animation.Timeline.INDEFINITE);
+        autoRefresh.play();
+    }
+
+    private void atualizarEstiloAbas(boolean pedidosAtiva) {
+        String ativo = "-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 8 8 0 0; " +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 8 20 8 20;";
+        String inativo = "-fx-background-color: #bdc3c7; -fx-text-fill: #2c3e50; -fx-background-radius: 8 8 0 0; " +
+                "-fx-font-size: 14px; -fx-padding: 8 20 8 20;";
+        btnAbaPedidos.setStyle(pedidosAtiva ? ativo : inativo);
+        btnAbaDemandas.setStyle(pedidosAtiva ? inativo : ativo);
+    }
+
+    // ============================================================
+    // PÁGINA 1 — PEDIDOS
+    // ============================================================
+
+    private VBox construirPaginaPedidos() {
+        VBox pagina = new VBox(15);
 
         Label titulo = new Label("📋 Pedidos");
         titulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
@@ -56,7 +141,7 @@ public class PedidosView {
         lblFiltrarTitulo.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: white;");
 
         Button btnFiltroTodos = new Button("Todos");
-        btnFiltroTodos.setStyle(estiloChip(true));
+        btnFiltroTodos.setStyle(estiloChip(false));
 
         java.util.List<ToggleButton> chipsTipo = new java.util.ArrayList<>();
         for (TipoPersonalizacao tipo : TipoPersonalizacao.values()) {
@@ -94,9 +179,7 @@ public class PedidosView {
 
         VBox compartimentoFiltros = new VBox(filtros);
         compartimentoFiltros.setPadding(new Insets(14));
-        compartimentoFiltros.setStyle(
-                "-fx-background-color: #2980b9; -fx-background-radius: 10;"
-        );
+        compartimentoFiltros.setStyle("-fx-background-color: #2980b9; -fx-background-radius: 10;");
 
         TextField tfPesquisa = new TextField();
         tfPesquisa.setPromptText("🔍 Pesquisar por nome, código, data ou anotação...");
@@ -124,25 +207,15 @@ public class PedidosView {
         col2.setPercentWidth(50);
         col2.setFillWidth(true);
         gridPedidos.getColumnConstraints().addAll(col1, col2);
-        gridPedidos.getRowConstraints().clear();
 
         ScrollPane scroll = new ScrollPane(gridPedidos);
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent;");
 
-        root.getChildren().addAll(cabecalhoPedidos, linhaFiltrosEPesquisa, scroll);
+        pagina.getChildren().addAll(cabecalhoPedidos, linhaFiltrosEPesquisa, scroll);
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
-        carregarPedidos();
-
-// Atualiza automaticamente a cada 1 minuto
-        javafx.animation.Timeline autoRefresh = new javafx.animation.Timeline(
-                new javafx.animation.KeyFrame(javafx.util.Duration.minutes(1), e -> carregarPedidos())
-        );
-        autoRefresh.setCycleCount(javafx.animation.Timeline.INDEFINITE);
-        autoRefresh.play();
-
-        carregarPedidos();
+        return pagina;
     }
 
     private void carregarPedidos() {
@@ -165,8 +238,7 @@ public class PedidosView {
             lblContadorDtf.setManaged(false);
         }
 
-        List<Pedido> pedidos = pedidoDAO.listarTodos().stream()
-                .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
+        List<Pedido> pedidos = todosPedidosAtivos.stream()
                 .filter(p -> filtrosSelecionados.isEmpty() || filtrosSelecionados.contains(p.getTipoPersonalizacao()))
                 .filter(p -> {
                     if (textoPesquisa.isBlank()) return true;
@@ -190,14 +262,13 @@ public class PedidosView {
             return;
         }
 
+        gridPedidos.getRowConstraints().clear();
         for (int i = 0; i < pedidos.size(); i++) {
             VBox card = criarCardPedido(pedidos.get(i));
             card.setMinHeight(220);
             GridPane.setValignment(card, javafx.geometry.VPos.TOP);
             gridPedidos.add(card, i % 2, i / 2);
         }
-
-// Garante que cada linha tenha altura independente
         for (int row = 0; row <= pedidos.size() / 2; row++) {
             RowConstraints rc = new RowConstraints();
             rc.setVgrow(Priority.NEVER);
@@ -216,36 +287,26 @@ public class PedidosView {
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);"
         );
 
-        // Barra colorida por prazo no topo
         HBox barra = new HBox();
         barra.setPrefHeight(6);
         barra.setMaxWidth(Double.MAX_VALUE);
         barra.setStyle("-fx-background-color: " + getCorPrazo(p.getDataEntrega()) + "; -fx-background-radius: 4;");
 
-        // Nome + código
         String codigo = extrairCodigo(p.getClienteTelefone());
         Label lblNome = new Label(p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo));
         lblNome.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
         lblNome.setWrapText(true);
 
-// Sinal de DTF não montado — mesmo triângulo do aviso de rascunhos
         StackPane iconeSinalDtf = new StackPane();
         iconeSinalDtf.setPrefSize(22, 20);
         iconeSinalDtf.setStyle("-fx-cursor: hand;");
 
         javafx.scene.shape.Polygon trianguloDtf = new javafx.scene.shape.Polygon();
-        trianguloDtf.getPoints().addAll(
-                11.0, 0.0,
-                22.0, 20.0,
-                0.0, 20.0
-        );
+        trianguloDtf.getPoints().addAll(11.0, 0.0, 22.0, 20.0, 0.0, 20.0);
         trianguloDtf.setFill(javafx.scene.paint.Color.web("#e67e22"));
 
         Label exclamacaoDtf = new Label("!");
-        exclamacaoDtf.setStyle(
-                "-fx-text-fill: white; -fx-font-size: 11px; -fx-font-weight: bold; " +
-                        "-fx-font-family: 'Arial';"
-        );
+        exclamacaoDtf.setStyle("-fx-text-fill: white; -fx-font-size: 11px; -fx-font-weight: bold; -fx-font-family: 'Arial';");
         exclamacaoDtf.setTranslateY(2);
 
         iconeSinalDtf.getChildren().addAll(trianguloDtf, exclamacaoDtf);
@@ -268,19 +329,16 @@ public class PedidosView {
             });
         });
 
-        // Tipo de personalização
         Label lblTipo = new Label(p.getTipoPersonalizacao().name());
         lblTipo.setStyle(
                 "-fx-background-color: #ecf0f1; -fx-padding: 2 8 2 8; " +
                         "-fx-background-radius: 10; -fx-font-size: 13px; -fx-text-fill: #7f8c8d;"
         );
 
-        // Data de entrega + prazo
         Label lblEntrega = new Label("📅 Entrega: " + p.getDataEntrega().format(fmt));
         lblEntrega.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
         lblEntrega.setWrapText(true);
 
-        // Valor
         VBox infoValor = new VBox(2);
         if (p.getValor() != null) {
             Label lblValor = new Label("💰 Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
@@ -293,67 +351,47 @@ public class PedidosView {
             infoValor.getChildren().add(lblResta);
         }
 
-        // Status de pagamento
         Label lblPagamento = new Label("💳 " + p.getStatusPagamento().name());
         lblPagamento.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
 
-        // NF
         Label lblNF = new Label(p.isPrecisaNf() ? "🧾 Precisa de NF" : "");
         lblNF.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
 
-        // Notinha
         Label lblNotinha = new Label(p.isPrecisaNotinha() ? "🧾 Precisa de notinha" : "");
         lblNotinha.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
 
-// Atendente e tamanho do pedido
         Label lblAtendente = new Label(p.getAtendente() != null ? "👩‍💼 Atendente: " + p.getAtendente() : "");
         lblAtendente.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
 
         Label lblTamanho = new Label(p.getTamanhoPedido() != null ? "📦 " + p.getTamanhoPedido() : "");
         lblTamanho.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
 
-        // Anotação completa
         Label lblAnotacao = new Label(p.getAnotacao() != null ? p.getAnotacao() : "");
         lblAnotacao.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
         lblAnotacao.setWrapText(true);
 
-        // Botões
         HBox acoes = new HBox(8);
         acoes.setAlignment(Pos.CENTER_RIGHT);
 
         Button btnConcluir = new Button("✅ Concluir");
-        btnConcluir.setStyle(
-                "-fx-background-color: #27ae60; -fx-text-fill: white; " +
-                        "-fx-background-radius: 5; -fx-font-size: 13px;"
-        );
+        btnConcluir.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
 
         Button btnEditar = new Button("✏ Editar");
-        btnEditar.setStyle(
-                "-fx-background-color: #3498db; -fx-text-fill: white; " +
-                        "-fx-background-radius: 5; -fx-font-size: 13px;"
-        );
+        btnEditar.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
 
         Button btnRemover = new Button("🗑 Remover");
-        btnRemover.setStyle(
-                "-fx-background-color: #e74c3c; -fx-text-fill: white; " +
-                        "-fx-background-radius: 5; -fx-font-size: 13px;"
-        );
+        btnRemover.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
 
         Button btnImprimir = new Button("🖨 Imprimir");
-        btnImprimir.setStyle(
-                "-fx-background-color: #7f8c8d; -fx-text-fill: white; " +
-                        "-fx-background-radius: 5; -fx-font-size: 13px;"
-        );
+        btnImprimir.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
         btnImprimir.setOnAction(e -> imprimirEtiqueta(p));
 
-        // Verifica se tem layout
         acoes.getChildren().addAll(btnImprimir, btnConcluir, btnEditar, btnRemover);
 
         btnConcluir.setOnAction(e -> {
             p.setSituacao(SituacaoPedido.PRONTO);
             pedidoDAO.atualizar(p);
 
-            // Registra estatísticas
             if (p.getValor() != null) {
                 EstatisticaDAO estatisticaDAO = new EstatisticaDAO();
                 EstatisticasMes est = new EstatisticasMes();
@@ -405,8 +443,7 @@ public class PedidosView {
         btnEditar.setOnAction(e -> abrirEdicao(p));
 
         btnRemover.setOnAction(e -> {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                    "Remover pedido de " + p.getClienteNome() + "?");
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Remover pedido de " + p.getClienteNome() + "?");
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.OK) {
                     pedidoDAO.deletar(p.getId());
@@ -418,12 +455,10 @@ public class PedidosView {
         HBox linhaNome = new HBox(8, lblNome, iconeSinalDtf);
         linhaNome.setAlignment(Pos.CENTER_LEFT);
 
-// Coluna esquerda — informações do pedido
         VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblNF, lblNotinha, lblAtendente, lblTamanho);
         colunaEsquerda.setPrefWidth(200);
         HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 
-// Coluna direita — anotações
         VBox colunaDireita = new VBox(6);
         colunaDireita.setPrefWidth(180);
         colunaDireita.setMinWidth(180);
@@ -431,7 +466,6 @@ public class PedidosView {
         Label lblTituloAnotacao = new Label("📝 Anotações");
         lblTituloAnotacao.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;");
 
-        lblAnotacao.setWrapText(true);
         lblAnotacao.setMaxWidth(180);
 
         colunaDireita.getChildren().addAll(lblTituloAnotacao, lblAnotacao);
@@ -548,6 +582,352 @@ public class PedidosView {
         });
     }
 
+    // ============================================================
+    // PÁGINA 2 — DEMANDAS DE PEDIDOS
+    // ============================================================
+
+    private VBox construirPaginaDemandas() {
+        VBox pagina = new VBox(15);
+
+        Label titulo = new Label("📢 Demandas de Pedidos");
+        titulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        Button btnNovaDemanda = new Button("➕ Nova Demanda");
+        btnNovaDemanda.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-size: 13px;");
+        btnNovaDemanda.setOnAction(e -> abrirBuscaPedidoParaDemanda());
+
+        HBox cabecalho = new HBox(14, titulo, btnNovaDemanda);
+        cabecalho.setAlignment(Pos.CENTER_LEFT);
+
+        Button btnFiltroTodosDemanda = new Button("Todos");
+        btnFiltroTodosDemanda.setStyle(estiloChip(false));
+
+        ToggleButton chipMarco = criarChipFiltro("MARCO");
+        ToggleButton chipSimone = criarChipFiltro("SIMONE");
+
+        chipMarco.setOnAction(e -> {
+            if (chipMarco.isSelected()) filtrosDemandaSelecionados.add("MARCO");
+            else filtrosDemandaSelecionados.remove("MARCO");
+            btnFiltroTodosDemanda.setStyle(estiloChip(filtrosDemandaSelecionados.isEmpty()));
+            carregarDemandas();
+        });
+        chipSimone.setOnAction(e -> {
+            if (chipSimone.isSelected()) filtrosDemandaSelecionados.add("SIMONE");
+            else filtrosDemandaSelecionados.remove("SIMONE");
+            btnFiltroTodosDemanda.setStyle(estiloChip(filtrosDemandaSelecionados.isEmpty()));
+            carregarDemandas();
+        });
+        btnFiltroTodosDemanda.setOnAction(e -> {
+            filtrosDemandaSelecionados.clear();
+            chipMarco.setSelected(false);
+            chipSimone.setSelected(false);
+            btnFiltroTodosDemanda.setStyle(estiloChip(true));
+            carregarDemandas();
+        });
+
+        Label lblFiltrarTitulo = new Label("Filtrar:");
+        lblFiltrarTitulo.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: white;");
+
+        FlowPane filtros = new FlowPane(8, 8);
+        filtros.setAlignment(Pos.CENTER_LEFT);
+        filtros.getChildren().addAll(lblFiltrarTitulo, btnFiltroTodosDemanda, chipMarco, chipSimone);
+
+        VBox compartimentoFiltros = new VBox(filtros);
+        compartimentoFiltros.setPadding(new Insets(14));
+        compartimentoFiltros.setStyle("-fx-background-color: #2980b9; -fx-background-radius: 10;");
+
+        TextField tfPesquisaDemanda = new TextField();
+        tfPesquisaDemanda.setPromptText("🔍 Pesquisar por nome, código ou data do pedido...");
+        tfPesquisaDemanda.setPrefWidth(320);
+        tfPesquisaDemanda.setStyle(
+                "-fx-font-size: 13px; -fx-background-radius: 6; " +
+                        "-fx-border-color: #dcdde1; -fx-border-radius: 6;"
+        );
+        tfPesquisaDemanda.textProperty().addListener((obs, oldVal, newVal) -> {
+            textoPesquisaDemanda = newVal.toLowerCase().trim();
+            carregarDemandas();
+        });
+
+        VBox linhaFiltrosEPesquisa = new VBox(10, compartimentoFiltros, tfPesquisaDemanda);
+
+        gridDemandas = new GridPane();
+        gridDemandas.setHgap(12);
+        gridDemandas.setVgap(12);
+        gridDemandas.setPadding(new Insets(4));
+
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        col1.setFillWidth(true);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        col2.setFillWidth(true);
+        gridDemandas.getColumnConstraints().addAll(col1, col2);
+
+        ScrollPane scroll = new ScrollPane(gridDemandas);
+        scroll.setFitToWidth(true);
+        scroll.setStyle("-fx-background-color: transparent;");
+
+        pagina.getChildren().addAll(cabecalho, linhaFiltrosEPesquisa, scroll);
+        VBox.setVgrow(scroll, Priority.ALWAYS);
+
+        return pagina;
+    }
+
+    private void carregarDemandas() {
+        if (gridDemandas == null) return;
+        gridDemandas.getChildren().clear();
+
+        List<DemandaPedido> todasDemandas = demandaPedidoDAO.listarTodas();
+
+        if (lblContadorDemandas != null) {
+            int total = todasDemandas.size();
+            if (total > 0) {
+                lblContadorDemandas.setText(String.valueOf(total));
+                lblContadorDemandas.setVisible(true);
+                lblContadorDemandas.setManaged(true);
+            } else {
+                lblContadorDemandas.setVisible(false);
+                lblContadorDemandas.setManaged(false);
+            }
+        }
+
+        List<DemandaPedido> demandas = todasDemandas.stream()
+                .filter(d -> filtrosDemandaSelecionados.isEmpty() || filtrosDemandaSelecionados.contains(d.getDestinatario()))
+                .filter(d -> {
+                    if (textoPesquisaDemanda.isBlank()) return true;
+                    String nome = d.getPedidoClienteNome() != null ? d.getPedidoClienteNome().toLowerCase() : "";
+                    String codigo = extrairCodigo(d.getPedidoClienteTelefone()).toLowerCase();
+                    String data = d.getPedidoDataEntrega() != null ? d.getPedidoDataEntrega().format(fmt).toLowerCase() : "";
+                    return nome.contains(textoPesquisaDemanda) || codigo.contains(textoPesquisaDemanda) || data.contains(textoPesquisaDemanda);
+                })
+                .toList();
+
+        if (demandas.isEmpty()) {
+            Label vazio = new Label("Nenhuma demanda encontrada.");
+            vazio.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 14px;");
+            gridDemandas.add(vazio, 0, 0, 2, 1);
+            return;
+        }
+
+        gridDemandas.getRowConstraints().clear();
+        for (int i = 0; i < demandas.size(); i++) {
+            VBox card = criarCardDemanda(demandas.get(i));
+            card.setMinHeight(160);
+            GridPane.setValignment(card, javafx.geometry.VPos.TOP);
+            gridDemandas.add(card, i % 2, i / 2);
+        }
+        for (int row = 0; row <= demandas.size() / 2; row++) {
+            RowConstraints rc = new RowConstraints();
+            rc.setVgrow(Priority.NEVER);
+            rc.setFillHeight(false);
+            gridDemandas.getRowConstraints().add(rc);
+        }
+    }
+
+    private VBox criarCardDemanda(DemandaPedido d) {
+        VBox card = new VBox(10);
+        card.setPadding(new Insets(14));
+        card.setMaxWidth(Double.MAX_VALUE);
+        card.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 8; " +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);"
+        );
+
+        HBox barra = new HBox();
+        barra.setPrefHeight(6);
+        barra.setMaxWidth(Double.MAX_VALUE);
+        barra.setStyle("-fx-background-color: " + getCorPrazo(d.getPedidoDataEntrega()) + "; -fx-background-radius: 4;");
+
+        String codigo = extrairCodigo(d.getPedidoClienteTelefone());
+        Label lblNome = new Label(d.getPedidoClienteNome() + (codigo.isEmpty() ? "" : " " + codigo));
+        lblNome.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        lblNome.setWrapText(true);
+
+        Label lblDestinatario = new Label("→ " + d.getDestinatario());
+        lblDestinatario.setStyle(
+                "-fx-background-color: #ecf0f1; -fx-padding: 2 8 2 8; " +
+                        "-fx-background-radius: 10; -fx-font-size: 12px; -fx-text-fill: #7f8c8d;"
+        );
+
+        HBox cabecalho = new HBox(10, lblNome, lblDestinatario);
+        cabecalho.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblTexto = new Label(d.getTexto());
+        lblTexto.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
+        lblTexto.setWrapText(true);
+
+        HBox acoes = new HBox(8);
+        acoes.setAlignment(Pos.CENTER_RIGHT);
+
+        Button btnEditar = new Button("✏ Editar");
+        btnEditar.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 12px;");
+        btnEditar.setOnAction(e -> abrirEdicaoDemanda(d));
+
+        Button btnRemover = new Button("🗑 Remover");
+        btnRemover.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 12px;");
+        btnRemover.setOnAction(e -> {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Remover esta demanda?");
+            confirm.showAndWait().ifPresent(r -> {
+                if (r == ButtonType.OK) {
+                    demandaPedidoDAO.deletar(d.getId());
+                    carregarDemandas();
+                }
+            });
+        });
+
+        acoes.getChildren().addAll(btnEditar, btnRemover);
+
+        card.getChildren().addAll(barra, cabecalho, lblTexto, acoes);
+        return card;
+    }
+
+    private void abrirEdicaoDemanda(DemandaPedido d) {
+        Dialog<DemandaPedido> dialog = new Dialog<>();
+        dialog.setTitle("Editar Demanda");
+
+        TextArea taTexto = new TextArea(d.getTexto());
+        taTexto.setPrefRowCount(4);
+
+        ComboBox<String> cbDestinatario = new ComboBox<>();
+        cbDestinatario.getItems().addAll("MARCO", "SIMONE");
+        cbDestinatario.setValue(d.getDestinatario());
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        grid.add(new Label("Texto:"), 0, 0); grid.add(taTexto, 1, 0);
+        grid.add(new Label("Destinatário:"), 0, 1); grid.add(cbDestinatario, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK) {
+                d.setTexto(taTexto.getText().trim());
+                d.setDestinatario(cbDestinatario.getValue());
+                return d;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(demandaAtualizada -> {
+            demandaPedidoDAO.atualizar(demandaAtualizada);
+            carregarDemandas();
+        });
+    }
+
+    private void abrirBuscaPedidoParaDemanda() {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Nova Demanda");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        VBox box = new VBox(10);
+        box.setPadding(new Insets(20));
+        box.setPrefWidth(420);
+
+        TextField tfBusca = new TextField();
+        tfBusca.setPromptText("🔍 Pesquisar pedido por nome, código ou data...");
+        tfBusca.setStyle(
+                "-fx-font-size: 13px; -fx-background-radius: 6; " +
+                        "-fx-border-color: #dcdde1; -fx-border-radius: 6;"
+        );
+
+        VBox resultados = new VBox(8);
+        ScrollPane scrollResultados = new ScrollPane(resultados);
+        scrollResultados.setFitToWidth(true);
+        scrollResultados.setPrefHeight(300);
+
+        Runnable atualizarResultados = () -> {
+            resultados.getChildren().clear();
+            String texto = tfBusca.getText().toLowerCase().trim();
+            List<Pedido> pedidos = pedidoDAO.listarTodos().stream()
+                    .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
+                    .filter(p -> {
+                        if (texto.isBlank()) return true;
+                        String nome = p.getClienteNome() != null ? p.getClienteNome().toLowerCase() : "";
+                        String codigo = extrairCodigo(p.getClienteTelefone()).toLowerCase();
+                        String data = p.getDataEntrega() != null ? p.getDataEntrega().format(fmt).toLowerCase() : "";
+                        return nome.contains(texto) || codigo.contains(texto) || data.contains(texto);
+                    })
+                    .sorted((a, b) -> a.getDataEntrega().compareTo(b.getDataEntrega()))
+                    .toList();
+
+            if (pedidos.isEmpty()) {
+                Label vazio = new Label("Nenhum pedido encontrado.");
+                vazio.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 13px;");
+                resultados.getChildren().add(vazio);
+                return;
+            }
+
+            for (Pedido p : pedidos) {
+                String codigo = extrairCodigo(p.getClienteTelefone());
+                Button btnPedido = new Button(p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo) +
+                        "  •  " + p.getDataEntrega().format(fmt));
+                btnPedido.setMaxWidth(Double.MAX_VALUE);
+                btnPedido.setStyle(
+                        "-fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50; " +
+                                "-fx-alignment: CENTER_LEFT; -fx-font-size: 13px; -fx-background-radius: 6;"
+                );
+                btnPedido.setOnAction(e -> {
+                    dialog.close();
+                    javafx.application.Platform.runLater(() -> abrirFormularioNovaDemanda(p));
+                });
+                resultados.getChildren().add(btnPedido);
+            }
+        };
+
+        tfBusca.textProperty().addListener((obs, oldVal, newVal) -> atualizarResultados.run());
+        atualizarResultados.run();
+
+        box.getChildren().addAll(new Label("Selecione o pedido:"), tfBusca, scrollResultados);
+        dialog.getDialogPane().setContent(box);
+        dialog.showAndWait();
+    }
+
+    private void abrirFormularioNovaDemanda(Pedido p) {
+        Dialog<DemandaPedido> dialog = new Dialog<>();
+        dialog.setTitle("Nova Demanda para " + p.getClienteNome());
+
+        TextArea taTexto = new TextArea();
+        taTexto.setPromptText("Escreva a demanda...");
+        taTexto.setPrefRowCount(4);
+
+        ComboBox<String> cbDestinatario = new ComboBox<>();
+        cbDestinatario.getItems().addAll("MARCO", "SIMONE");
+        cbDestinatario.setPromptText("Selecione...");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        grid.add(new Label("Texto:"), 0, 0); grid.add(taTexto, 1, 0);
+        grid.add(new Label("Destinatário:"), 0, 1); grid.add(cbDestinatario, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK && !taTexto.getText().isBlank() && cbDestinatario.getValue() != null) {
+                DemandaPedido d = new DemandaPedido();
+                d.setPedidoId(p.getId());
+                d.setTexto(taTexto.getText().trim());
+                d.setDestinatario(cbDestinatario.getValue());
+                return d;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(demanda -> {
+            demandaPedidoDAO.salvar(demanda);
+            carregarDemandas();
+        });
+    }
+
+    // ============================================================
+    // AUXILIARES
+    // ============================================================
+
     private String extrairCodigo(String telefone) {
         if (telefone == null || telefone.isBlank()) return "";
         String numeros = telefone.replaceAll("[^0-9]", "");
@@ -563,20 +943,29 @@ public class PedidosView {
         return "#27ae60";
     }
 
-    private Button criarBotaoFiltro(String texto) {
-        Button btn = new Button(texto);
-        btn.setStyle(
-                "-fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50; " +
-                        "-fx-background-radius: 5; -fx-font-size: 12px;"
-        );
-        return btn;
+    private ToggleButton criarChipFiltro(String texto) {
+        ToggleButton tb = new ToggleButton(texto);
+        tb.setStyle(estiloChip(false));
+        tb.selectedProperty().addListener((obs, oldVal, novoValor) -> tb.setStyle(estiloChip(novoValor)));
+        return tb;
+    }
+
+    private String estiloChip(boolean selecionado) {
+        if (selecionado) {
+            return "-fx-background-color: rgba(255,255,255,0.25); -fx-text-fill: white; " +
+                    "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
+        } else {
+            return "-fx-background-color: white; -fx-text-fill: #2980b9; " +
+                    "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
+        }
     }
 
     private void imprimirEtiqueta(Pedido p) {
         String codigo = extrairCodigo(p.getClienteTelefone());
         String nomeCompleto = p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo);
 
-        // Monta linhas da etiqueta
         java.util.List<String> linhas = new java.util.ArrayList<>();
         linhas.add("INVENTY STAMP");
         linhas.add("--------------");
@@ -613,9 +1002,8 @@ public class PedidosView {
         }
 
         try {
-            // Cria imagem com o texto
-            int largura = 283; // 100mm a 72dpi
-            int altura = 425;  // 150mm a 72dpi
+            int largura = 283;
+            int altura = 425;
             java.awt.image.BufferedImage imagem = new java.awt.image.BufferedImage(
                     largura, altura, java.awt.image.BufferedImage.TYPE_INT_RGB);
 
@@ -637,14 +1025,11 @@ public class PedidosView {
             }
             g.dispose();
 
-            // Imprime a imagem
             java.awt.print.PrinterJob printerJob = java.awt.print.PrinterJob.getPrinterJob();
 
-            // Encontra impressora LABEL
             javax.print.PrintService[] services = javax.print.PrintServiceLookup.lookupPrintServices(null, null);
             javax.print.PrintService servico = null;
             for (javax.print.PrintService s : services) {
-                System.out.println("Impressora: " + s.getName());
                 if (s.getName().equalsIgnoreCase("LABEL em inventy-kennia") ||
                         s.getName().equalsIgnoreCase("LABEL") ||
                         s.getName().toLowerCase().contains("label")) {
@@ -697,24 +1082,5 @@ public class PedidosView {
 
     public VBox getView() {
         return root;
-    }
-
-    private ToggleButton criarChipFiltro(String texto) {
-        ToggleButton tb = new ToggleButton(texto);
-        tb.setStyle(estiloChip(false));
-        tb.selectedProperty().addListener((obs, oldVal, novoValor) -> tb.setStyle(estiloChip(novoValor)));
-        return tb;
-    }
-
-    private String estiloChip(boolean selecionado) {
-        if (selecionado) {
-            return "-fx-background-color: rgba(255,255,255,0.25); -fx-text-fill: white; " +
-                    "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
-                    "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
-        } else {
-            return "-fx-background-color: white; -fx-text-fill: #2980b9; " +
-                    "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
-                    "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
-        }
     }
 }
