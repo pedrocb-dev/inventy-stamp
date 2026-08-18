@@ -100,6 +100,27 @@ public class AtendimentoView {
         tfNome = criarTextField("Nome do cliente", 200);
         tfTelefone = criarTextField("(11) 99999-9999", 140);
 
+        tfTelefone.textProperty().addListener((obs, oldVal, newVal) -> {
+            String digitos = newVal.replaceAll("[^0-9]", "");
+            if (digitos.length() > 11) digitos = digitos.substring(0, 11);
+
+            StringBuilder formatado = new StringBuilder();
+            if (digitos.length() > 0) {
+                formatado.append("(").append(digitos, 0, Math.min(2, digitos.length()));
+            }
+            if (digitos.length() >= 3) {
+                formatado.append(") ").append(digitos, 2, Math.min(7, digitos.length()));
+            }
+            if (digitos.length() >= 8) {
+                formatado.append("-").append(digitos, 7, digitos.length());
+            }
+
+            if (!formatado.toString().equals(newVal)) {
+                tfTelefone.setText(formatado.toString());
+                tfTelefone.positionCaret(formatado.length());
+            }
+        });
+
         Button btnCopiarTelefone = new Button("💬");
         btnCopiarTelefone.setTooltip(new Tooltip("Abrir WhatsApp"));
         btnCopiarTelefone.setPrefSize(38, 38);
