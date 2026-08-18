@@ -980,8 +980,6 @@ public class PedidosView {
         linhas.add("Pagamento: " + p.getStatusPagamento().name());
         if (p.getAtendente() != null && !p.getAtendente().isBlank())
             linhas.add("Atendente: " + p.getAtendente());
-        if (p.getTamanhoPedido() != null && !p.getTamanhoPedido().isBlank())
-            linhas.add("Tamanho: " + p.getTamanhoPedido());
         if (p.isPrecisaNf())
             linhas.add("Precisa de NF");
         if (p.isPrecisaNotinha())

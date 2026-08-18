@@ -100,22 +100,22 @@ public class AtendimentoView {
         tfNome = criarTextField("Nome do cliente", 200);
         tfTelefone = criarTextField("(11) 99999-9999", 140);
 
-        Button btnCopiarTelefone = new Button("📋");
-        btnCopiarTelefone.setTooltip(new Tooltip("Copiar telefone"));
+        Button btnCopiarTelefone = new Button("💬");
+        btnCopiarTelefone.setTooltip(new Tooltip("Abrir WhatsApp"));
         btnCopiarTelefone.setPrefSize(38, 38);
         btnCopiarTelefone.setStyle(
-                "-fx-background-color: #3498db; -fx-text-fill: white; " +
+                "-fx-background-color: #25D366; -fx-text-fill: white; " +
                         "-fx-background-radius: 8; -fx-font-size: 15px;"
         );
         btnCopiarTelefone.setOnMouseEntered(e -> btnCopiarTelefone.setStyle(
-                "-fx-background-color: #2980b9; -fx-text-fill: white; " +
+                "-fx-background-color: #1ebe57; -fx-text-fill: white; " +
                         "-fx-background-radius: 8; -fx-font-size: 15px;"
         ));
         btnCopiarTelefone.setOnMouseExited(e -> btnCopiarTelefone.setStyle(
-                "-fx-background-color: #3498db; -fx-text-fill: white; " +
+                "-fx-background-color: #25D366; -fx-text-fill: white; " +
                         "-fx-background-radius: 8; -fx-font-size: 15px;"
         ));
-        Label lblCopiado = new Label("Copiado!");
+        Label lblCopiado = new Label("Abrindo...");
         lblCopiado.setStyle("-fx-font-size: 10px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
         lblCopiado.setVisible(false);
         lblCopiado.setMinWidth(60);
@@ -123,21 +123,25 @@ public class AtendimentoView {
 
         btnCopiarTelefone.setOnAction(e -> {
             if (!tfTelefone.getText().isBlank()) {
-                javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
-                javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
-                content.putString(tfTelefone.getText().trim());
-                clipboard.setContent(content);
+                try {
+                    String numeros = tfTelefone.getText().replaceAll("[^0-9]", "");
+                    String numeroComDDI = numeros.startsWith("55") ? numeros : "55" + numeros;
+                    String url = "whatsapp://send?phone=" + numeroComDDI;
+                    Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", url});
 
-                lblCopiado.setVisible(true);
-                lblCopiado.setOpacity(1.0);
+                    lblCopiado.setVisible(true);
+                    lblCopiado.setOpacity(1.0);
 
-                javafx.animation.FadeTransition fade = new javafx.animation.FadeTransition(
-                        javafx.util.Duration.millis(1200), lblCopiado);
-                fade.setFromValue(1.0);
-                fade.setToValue(0.0);
-                fade.setDelay(javafx.util.Duration.millis(600));
-                fade.setOnFinished(ev -> lblCopiado.setVisible(false));
-                fade.play();
+                    javafx.animation.FadeTransition fade = new javafx.animation.FadeTransition(
+                            javafx.util.Duration.millis(1200), lblCopiado);
+                    fade.setFromValue(1.0);
+                    fade.setToValue(0.0);
+                    fade.setDelay(javafx.util.Duration.millis(600));
+                    fade.setOnFinished(ev -> lblCopiado.setVisible(false));
+                    fade.play();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         });
 
