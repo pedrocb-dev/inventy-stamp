@@ -389,7 +389,16 @@ public class PedidosView {
         btnImprimir.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
         btnImprimir.setOnAction(e -> imprimirEtiqueta(p));
 
-        acoes.getChildren().addAll(btnImprimir, btnConcluir, btnEditar, btnRemover);
+        Button btnNotinha = new Button("🧾 Notinha");
+        btnNotinha.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
+        btnNotinha.setOnAction(e -> gerarECopiarNotinha(p));
+
+        Button btnWhatsApp = new Button("💬");
+        btnWhatsApp.setTooltip(new Tooltip("Abrir WhatsApp do cliente"));
+        btnWhatsApp.setStyle("-fx-background-color: #25D366; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
+        btnWhatsApp.setOnAction(e -> abrirWhatsAppCliente(p));
+
+        acoes.getChildren().addAll(btnWhatsApp, btnNotinha, btnImprimir, btnConcluir, btnEditar, btnRemover);
 
         btnConcluir.setOnAction(e -> {
             p.setSituacao(SituacaoPedido.PRONTO);
@@ -1083,6 +1092,92 @@ public class PedidosView {
                 : Alert.AlertType.ERROR;
         Alert alert = new Alert(tipo, mensagem);
         alert.showAndWait();
+    }
+
+    private void abrirWhatsAppCliente(Pedido p) {
+        if (p.getClienteTelefone() == null || p.getClienteTelefone().isBlank()) {
+            mostrarAlerta("Este pedido não tem telefone cadastrado.");
+            return;
+        }
+        try {
+            String numeros = p.getClienteTelefone().replaceAll("[^0-9]", "");
+            String numeroComDDI = numeros.startsWith("55") ? numeros : "55" + numeros;
+            String url = "whatsapp://send?phone=" + numeroComDDI;
+            Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", url});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void gerarECopiarNotinha(Pedido p) {
+        String codigo = extrairCodigo(p.getClienteTelefone());
+        String nomeCompleto = p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo);
+
+        java.util.List<String> linhas = new java.util.ArrayList<>();
+        linhas.add("INVENTY STAMP");
+        linhas.add("");
+        linhas.add(nomeCompleto);
+        if (p.getClienteTelefone() != null && !p.getClienteTelefone().isBlank())
+            linhas.add("Tel: " + p.getClienteTelefone());
+        linhas.add("");
+        linhas.add("Personalização: " + p.getTipoPersonalizacao().name());
+        if (p.getValor() != null)
+            linhas.add("Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
+        linhas.add("Pagamento: " + p.getStatusPagamento().name());
+        linhas.add("Confirmado em: " + p.getDataConfirmacao().format(fmt));
+        linhas.add("Entrega: " + p.getDataEntrega().format(fmt));
+        if (p.getAtendente() != null && !p.getAtendente().isBlank())
+            linhas.add("Atendente: " + p.getAtendente());
+
+        try {
+            int largura = 420;
+            int altura = 60 + (linhas.size() * 28);
+            java.awt.image.BufferedImage imagem = new java.awt.image.BufferedImage(
+                    largura, altura, java.awt.image.BufferedImage.TYPE_INT_RGB);
+
+            java.awt.Graphics2D g = imagem.createGraphics();
+            g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setColor(java.awt.Color.WHITE);
+            g.fillRect(0, 0, largura, altura);
+            g.setColor(java.awt.Color.BLACK);
+
+            int y = 40;
+            for (String linha : linhas) {
+                if (linha.equals("INVENTY STAMP")) {
+                    g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
+                } else if (linha.equals(nomeCompleto)) {
+                    g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 16));
+                } else {
+                    g.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 14));
+                }
+                g.drawString(linha, 20, y);
+                y += 28;
+            }
+            g.dispose();
+
+            java.awt.datatransfer.Clipboard clipboard = java.awt.Toolkit.getDefaultToolkit().getSystemClipboard();
+            java.awt.datatransfer.Transferable transferableImage = new java.awt.datatransfer.Transferable() {
+                @Override
+                public java.awt.datatransfer.DataFlavor[] getTransferDataFlavors() {
+                    return new java.awt.datatransfer.DataFlavor[]{java.awt.datatransfer.DataFlavor.imageFlavor};
+                }
+                @Override
+                public boolean isDataFlavorSupported(java.awt.datatransfer.DataFlavor flavor) {
+                    return java.awt.datatransfer.DataFlavor.imageFlavor.equals(flavor);
+                }
+                @Override
+                public Object getTransferData(java.awt.datatransfer.DataFlavor flavor) {
+                    return imagem;
+                }
+            };
+            clipboard.setContents(transferableImage, null);
+
+            mostrarAlerta("✅ Notinha copiada! Cole com Ctrl+V.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro ao gerar notinha: " + e.getMessage());
+        }
     }
 
     public VBox getView() {
