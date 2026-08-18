@@ -563,6 +563,7 @@ public class AtendimentoView {
         tfValor.setText(r.getValor() != null ? r.getValor() : "");
         tfResta.setText(r.getResta() != null ? r.getResta() : "");
         cbNF.setValue(r.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
+        cbNotinha.setValue(r.isPrecisaNotinha() ? "Precisa de notinha" : "Não precisa de notinha");
         cbAtendente.setValue(r.getAtendente());
         cbTamanhoPedido.setValue(r.getTamanhoPedido());
         taDemanda.setText(r.getDemandaTexto() != null ? r.getDemandaTexto() : "");
@@ -635,6 +636,7 @@ public class AtendimentoView {
         r.setStatusPagamento(cbPagamento.getValue() != null ? cbPagamento.getValue().name() : null);
         r.setResta(tfResta.getText().trim());
         r.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
+        r.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de notinha"));
         r.setAtendente(cbAtendente.getValue());
         r.setTamanhoPedido(cbTamanhoPedido.getValue());
         r.setDemandaTexto(taDemanda.getText().trim());

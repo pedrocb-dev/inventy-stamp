@@ -360,6 +360,9 @@ public class PedidosView {
         Label lblNotinha = new Label(p.isPrecisaNotinha() ? "🧾 Precisa de notinha" : "");
         lblNotinha.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
 
+        Label lblTelefone = new Label(p.getClienteTelefone() != null && !p.getClienteTelefone().isBlank() ? "📞 " + p.getClienteTelefone() : "");
+        lblTelefone.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
+
         Label lblAtendente = new Label(p.getAtendente() != null ? "👩‍💼 Atendente: " + p.getAtendente() : "");
         lblAtendente.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
 
@@ -455,7 +458,7 @@ public class PedidosView {
         HBox linhaNome = new HBox(8, lblNome, iconeSinalDtf);
         linhaNome.setAlignment(Pos.CENTER_LEFT);
 
-        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblEntrega, infoValor, lblPagamento, lblNF, lblNotinha, lblAtendente, lblTamanho);
+        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblTelefone, lblEntrega, infoValor, lblPagamento, lblNF, lblNotinha, lblAtendente, lblTamanho);
         colunaEsquerda.setPrefWidth(200);
         HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 
@@ -970,6 +973,8 @@ public class PedidosView {
         linhas.add("INVENTY STAMP");
         linhas.add("--------------");
         linhas.add("Cliente: " + nomeCompleto);
+        if (p.getClienteTelefone() != null && !p.getClienteTelefone().isBlank())
+            linhas.add("Telefone: " + p.getClienteTelefone());
         linhas.add("Prazo: " + p.getDataEntrega().format(fmt));
         linhas.add("Tipo: " + p.getTipoPersonalizacao().name());
         linhas.add("Pagamento: " + p.getStatusPagamento().name());
@@ -977,6 +982,8 @@ public class PedidosView {
             linhas.add("Atendente: " + p.getAtendente());
         if (p.getTamanhoPedido() != null && !p.getTamanhoPedido().isBlank())
             linhas.add("Tamanho: " + p.getTamanhoPedido());
+        if (p.isPrecisaNf())
+            linhas.add("Precisa de NF");
         if (p.isPrecisaNotinha())
             linhas.add("Precisa de notinha");
         if (p.getValor() != null)
