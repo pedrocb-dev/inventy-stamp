@@ -386,7 +386,7 @@ public class PedidosView {
         Button btnEditar = new Button("✏ Editar");
         btnEditar.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
 
-        Button btnRemover = new Button("🗑 Remover");
+        Button btnRemover = new Button("🗑 Cancelar");
         btnRemover.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
 
         Button btnImprimir = new Button("🖨 Imprimir");
@@ -459,7 +459,7 @@ public class PedidosView {
         btnEditar.setOnAction(e -> abrirEdicao(p));
 
         btnRemover.setOnAction(e -> {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Remover pedido de " + p.getClienteNome() + "?");
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Cancelar pedido de " + p.getClienteNome() + "?");
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.OK) {
                     pedidoDAO.deletar(p.getId());
@@ -806,10 +806,10 @@ public class PedidosView {
         btnEditar.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 12px;");
         btnEditar.setOnAction(e -> abrirEdicaoDemanda(d));
 
-        Button btnRemover = new Button("🗑 Remover");
-        btnRemover.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 12px;");
+        Button btnRemover = new Button("🗑 Cancelar");
+        btnRemover.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
         btnRemover.setOnAction(e -> {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Remover esta demanda?");
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Cancelar esta demanda?");
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.OK) {
                     demandaPedidoDAO.deletar(d.getId());
@@ -1205,7 +1205,7 @@ public class PedidosView {
             };
             clipboard.setContents(transferableImage, null);
 
-            mostrarAlerta("✅ Noinha copiada! Cole com Ctrl+V.");
+            mostrarAlerta("✅ Cupom Fiscal copiado! Cole com Ctrl+V.");
 
         } catch (Exception e) {
             e.printStackTrace();
