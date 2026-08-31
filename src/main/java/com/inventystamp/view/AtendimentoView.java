@@ -22,6 +22,7 @@ public class AtendimentoView {
     private final DateTimeFormatter fmtSql = DateTimeFormatter.ISO_LOCAL_DATE;
 
     private TextField tfNome, tfTelefone, tfValor, tfResta;
+    private ToggleButton tbACombinar;
     private TextArea taAnotacao;
     private ComboBox<TipoPersonalizacao> cbTipo;
     private ComboBox<StatusPagamento> cbPagamento;
@@ -231,6 +232,34 @@ public class AtendimentoView {
 
         tfValor = criarTextField("Ex: 65.00", 120);
 
+        tbACombinar = new ToggleButton("A combinar");
+        tbACombinar.setStyle(
+                "-fx-font-size: 12px; -fx-background-radius: 6; " +
+                        "-fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50;"
+        );
+        tbACombinar.selectedProperty().addListener((obs, oldVal, novoValor) -> {
+            tfValor.setDisable(novoValor);
+            if (novoValor) tfValor.clear();
+            tbACombinar.setStyle(novoValor
+                    ? "-fx-font-size: 12px; -fx-background-radius: 6; -fx-background-color: #8e44ad; -fx-text-fill: white;"
+                    : "-fx-font-size: 12px; -fx-background-radius: 6; -fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50;"
+            );
+
+            if (novoValor) {
+                cbPagamento.setValue(StatusPagamento.PAGAR_NA_RETIRADA);
+            }
+            cbPagamento.setDisable(novoValor);
+        });
+        VBox campoValor = new VBox(6);
+        Label lblValor = new Label("💰 Valor (R$)");
+        lblValor.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        HBox linhaValorBotao = new HBox(6, tfValor, tbACombinar);
+        linhaValorBotao.setAlignment(Pos.CENTER_LEFT);
+        campoValor.getChildren().addAll(lblValor, linhaValorBotao);
+        campoValor.setPrefWidth(220);
+        campoValor.setMinWidth(220);
+        campoValor.setMaxWidth(220);
+
         tfResta = criarTextField("Valor restante", 120);
         campoResta = criarCampoFixo("⚠ Resta (R$)", tfResta, 160);
         campoResta.setVisible(false);
@@ -243,7 +272,7 @@ public class AtendimentoView {
         });
 
         HBox linha4 = new HBox(12,
-                criarCampoFixo("💰 Valor (R$)", tfValor, 160),
+                campoValor,
                 campoResta
         );
 
@@ -414,13 +443,17 @@ public class AtendimentoView {
             p.setTamanhoPedido(cbTamanhoPedido.getValue());
             p.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de C. Fiscal"));
 
-            try {
-                if (!tfValor.getText().isBlank())
-                    p.setValor(new BigDecimal(tfValor.getText().replace(",", ".")));
-            } catch (Exception ex) {
-                lblFeedback.setText("⚠ Valor inválido. Use o formato: 65.00");
-                lblFeedback.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px;");
-                return;
+            p.setValorACombinar(tbACombinar.isSelected());
+
+            if (!tbACombinar.isSelected()) {
+                try {
+                    if (!tfValor.getText().isBlank())
+                        p.setValor(new BigDecimal(tfValor.getText().replace(",", ".")));
+                } catch (Exception ex) {
+                    lblFeedback.setText("⚠ Valor inválido. Use o formato: 65.00");
+                    lblFeedback.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px;");
+                    return;
+                }
             }
 
             try {
@@ -607,6 +640,8 @@ public class AtendimentoView {
         dpConfirmacao.setValue(LocalDate.now());
         dpEntrega.setValue(null);
         tfValor.clear();
+        tbACombinar.setSelected(false);
+        tfValor.setDisable(false);
         tfResta.clear();
         cbPagamento.setValue(null);
         cbNF.setValue("Não precisa de NF");

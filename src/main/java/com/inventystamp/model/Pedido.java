@@ -23,6 +23,7 @@ public class Pedido {
     private String atendente;
     private String tamanhoPedido;
     private boolean precisaNotinha;
+    private boolean valorACombinar;
 
     public Pedido() {}
 
@@ -79,4 +80,7 @@ public class Pedido {
 
     public boolean isPrecisaNotinha() { return precisaNotinha; }
     public void setPrecisaNotinha(boolean precisaNotinha) { this.precisaNotinha = precisaNotinha; }
+
+    public boolean isValorACombinar() { return valorACombinar; }
+    public void setValorACombinar(boolean valorACombinar) { this.valorACombinar = valorACombinar; }
 }

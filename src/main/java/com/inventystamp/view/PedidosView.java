@@ -340,7 +340,11 @@ public class PedidosView {
         lblEntrega.setWrapText(true);
 
         VBox infoValor = new VBox(2);
-        if (p.getValor() != null) {
+        if (p.isValorACombinar()) {
+            Label lblValor = new Label("💰 Valor a combinar");
+            lblValor.setStyle("-fx-font-size: 14px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
+            infoValor.getChildren().add(lblValor);
+        } else if (p.getValor() != null) {
             Label lblValor = new Label("💰 Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
             lblValor.setStyle("-fx-font-size: 14px; -fx-text-fill: #2c3e50;");
             infoValor.getChildren().add(lblValor);
@@ -509,8 +513,28 @@ public class PedidosView {
         ComboBox<StatusPagamento> cbPagamento = new ComboBox<>();
         cbPagamento.getItems().addAll(StatusPagamento.values());
         cbPagamento.setValue(p.getStatusPagamento());
+        cbPagamento.setDisable(p.isValorACombinar());
 
         TextField tfValor = new TextField(p.getValor() != null ? p.getValor().toString() : "");
+
+        ToggleButton tbACombinarEdicao = new ToggleButton("A combinar");
+        tbACombinarEdicao.setSelected(p.isValorACombinar());
+        tfValor.setDisable(p.isValorACombinar());
+        tbACombinarEdicao.setStyle(p.isValorACombinar()
+                ? "-fx-font-size: 12px; -fx-background-radius: 6; -fx-background-color: #8e44ad; -fx-text-fill: white;"
+                : "-fx-font-size: 12px; -fx-background-radius: 6; -fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50;"
+        );
+
+        tbACombinarEdicao.selectedProperty().addListener((obs, oldVal, novoValor) -> {
+            tfValor.setDisable(novoValor);
+            if (novoValor) tfValor.clear();
+            tbACombinarEdicao.setStyle(novoValor
+                    ? "-fx-font-size: 12px; -fx-background-radius: 6; -fx-background-color: #8e44ad; -fx-text-fill: white;"
+                    : "-fx-font-size: 12px; -fx-background-radius: 6; -fx-background-color: #ecf0f1; -fx-text-fill: #2c3e50;"
+            );
+            if (novoValor) cbPagamento.setValue(StatusPagamento.PAGAR_NA_RETIRADA);
+            cbPagamento.setDisable(novoValor);
+        });
 
         TextField tfResta = new TextField(p.getResta() != null ? p.getResta().toString() : "");
         tfResta.setVisible(p.getStatusPagamento() == StatusPagamento.PARCIAL);
@@ -537,7 +561,9 @@ public class PedidosView {
         grid.add(new Label("Anotação:"), 0, 2); grid.add(taAnotacao, 1, 2);
         grid.add(new Label("Tipo:"), 0, 3); grid.add(cbTipo, 1, 3);
         grid.add(new Label("Entrega:"), 0, 4); grid.add(dpEntrega, 1, 4);
-        grid.add(new Label("Valor:"), 0, 5); grid.add(tfValor, 1, 5);
+        grid.add(new Label("Valor:"), 0, 5);
+        HBox linhaValorEdicao = new HBox(6, tfValor, tbACombinarEdicao);
+        grid.add(linhaValorEdicao, 1, 5);
         grid.add(new Label("Pagamento:"), 0, 6); grid.add(cbPagamento, 1, 6);
         grid.add(lblResta, 0, 7); grid.add(tfResta, 1, 7);
 
@@ -574,7 +600,12 @@ public class PedidosView {
                 p.setTipoPersonalizacao(cbTipo.getValue());
                 p.setDataEntrega(dpEntrega.getValue());
                 p.setStatusPagamento(cbPagamento.getValue());
-                try { p.setValor(new java.math.BigDecimal(tfValor.getText())); } catch (Exception ex) {}
+                p.setValorACombinar(tbACombinarEdicao.isSelected());
+                if (!tbACombinarEdicao.isSelected()) {
+                    try { p.setValor(new java.math.BigDecimal(tfValor.getText())); } catch (Exception ex) {}
+                } else {
+                    p.setValor(null);
+                }
                 try {
                     if (!tfResta.getText().isBlank())
                         p.setResta(new java.math.BigDecimal(tfResta.getText()));
