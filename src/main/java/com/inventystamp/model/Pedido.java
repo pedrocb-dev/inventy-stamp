@@ -21,7 +21,6 @@ public class Pedido {
     private boolean precisaNf;
     private boolean dtfMontado;
     private String atendente;
-    private String tamanhoPedido;
     private boolean precisaCupomFiscal;
     private boolean valorACombinar;
 
@@ -74,9 +73,6 @@ public class Pedido {
 
     public String getAtendente() { return atendente; }
     public void setAtendente(String atendente) { this.atendente = atendente; }
-
-    public String getTamanhoPedido() { return tamanhoPedido; }
-    public void setTamanhoPedido(String tamanhoPedido) { this.tamanhoPedido = tamanhoPedido; }
 
     public boolean isPrecisaCupomFiscal() { return precisaCupomFiscal; }
     public void setPrecisaCupomFiscal(boolean precisaCupomFiscal) { this.precisaCupomFiscal = precisaCupomFiscal; }

@@ -370,9 +370,6 @@ public class PedidosView {
         Label lblAtendente = new Label(p.getAtendente() != null ? "👩‍💼 Atendente: " + p.getAtendente() : "");
         lblAtendente.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
 
-        Label lblTamanho = new Label(p.getTamanhoPedido() != null ? "📦 " + p.getTamanhoPedido() : "");
-        lblTamanho.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
-
         Label lblAnotacao = new Label(p.getAnotacao() != null ? p.getAnotacao() : "");
         lblAnotacao.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
         lblAnotacao.setWrapText(true);
@@ -432,13 +429,6 @@ public class PedidosView {
                     case SEM_PERSONALIZACAO -> est.setLucroSemPersonalizacao(p.getValor());
                 }
 
-                if (p.getTamanhoPedido() != null) {
-                    if (p.getTamanhoPedido().startsWith("Pequeno")) est.setQtdPequeno(1);
-                    else if (p.getTamanhoPedido().startsWith("Médio")) est.setQtdMedio(1);
-                    else if (p.getTamanhoPedido().startsWith("Grande")) est.setQtdGrande(1);
-                    else if (p.getTamanhoPedido().startsWith("Bem grande")) est.setQtdBemGrande(1);
-                }
-
                 estatisticaDAO.salvarOuAtualizar(est);
             }
 
@@ -471,7 +461,7 @@ public class PedidosView {
         HBox linhaNome = new HBox(8, lblNome, iconeSinalDtf);
         linhaNome.setAlignment(Pos.CENTER_LEFT);
 
-        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblTelefone, lblEntrega, infoValor, lblPagamento, lblNF, lblCupomFiscal, lblAtendente, lblTamanho);
+        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblTelefone, lblEntrega, infoValor, lblPagamento, lblNF, lblCupomFiscal, lblAtendente);
         colunaEsquerda.setPrefWidth(200);
         HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 
@@ -582,13 +572,6 @@ public class PedidosView {
         cbAtendenteEdicao.setValue(p.getAtendente());
         grid.add(new Label("👩‍💼 Atendente:"), 0, 10); grid.add(cbAtendenteEdicao, 1, 10);
 
-        ComboBox<String> cbTamanhoEdicao = new ComboBox<>();
-        cbTamanhoEdicao.getItems().addAll(
-                "Pequeno (até 10)", "Médio (até 30)", "Grande (até 50)", "Bem grande (mais de 50)"
-        );
-        cbTamanhoEdicao.setValue(p.getTamanhoPedido());
-        grid.add(new Label("📦 Tamanho:"), 0, 11); grid.add(cbTamanhoEdicao, 1, 11);
-
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -613,7 +596,6 @@ public class PedidosView {
                 p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
                 p.setPrecisaCupomFiscal(cbCupomFiscal.getValue().equals("Precisa de Cupom Fiscal"));
                 p.setAtendente(cbAtendenteEdicao.getValue());
-                p.setTamanhoPedido(cbTamanhoEdicao.getValue());
                 return p;
             }
             return null;

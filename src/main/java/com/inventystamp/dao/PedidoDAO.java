@@ -30,8 +30,8 @@ public class PedidoDAO {
 
     public void salvar(Pedido p) {
         String sql = "INSERT INTO pedidos (cliente_nome, cliente_telefone, anotacao, tipo_personalizacao, " +
-                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado, atendente, tamanho_pedido, precisa_cupomfiscal, valor_a_combinar) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado, atendente, precisa_cupomfiscal, valor_a_combinar) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -49,9 +49,8 @@ public class PedidoDAO {
             ps.setBoolean(11, p.isPrecisaNf());
             ps.setBoolean(12, p.isDtfMontado());
             ps.setString(13, p.getAtendente());
-            ps.setString(14, p.getTamanhoPedido());
-            ps.setBoolean(15, p.isPrecisaCupomFiscal());
-            ps.setBoolean(16, p.isValorACombinar());
+            ps.setBoolean(14, p.isPrecisaCupomFiscal());
+            ps.setBoolean(15, p.isValorACombinar());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -65,7 +64,7 @@ public class PedidoDAO {
 
     public void atualizar(Pedido p) {
         String sql = "UPDATE pedidos SET cliente_nome=?, cliente_telefone=?, anotacao=?, tipo_personalizacao=?, " +
-                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, tamanho_pedido=?, precisa_cupomfiscal=?, valor_a_combinar=? WHERE id=?";
+                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, precisa_cupomfiscal=?, valor_a_combinar=? WHERE id=?";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -84,10 +83,9 @@ public class PedidoDAO {
             ps.setBoolean(12, p.isPrecisaNf());
             ps.setBoolean(13, p.isDtfMontado());
             ps.setString(14, p.getAtendente());
-            ps.setString(15, p.getTamanhoPedido());
-            ps.setBoolean(16, p.isPrecisaCupomFiscal());
-            ps.setBoolean(17, p.isValorACombinar());
-            ps.setInt(18, p.getId());
+            ps.setBoolean(15, p.isPrecisaCupomFiscal());
+            ps.setBoolean(16, p.isValorACombinar());
+            ps.setInt(17, p.getId());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -126,7 +124,6 @@ public class PedidoDAO {
         p.setPrecisaNf(rs.getBoolean("precisa_nf"));
         p.setDtfMontado(rs.getBoolean("dtf_montado"));
         p.setAtendente(rs.getString("atendente"));
-        p.setTamanhoPedido(rs.getString("tamanho_pedido"));
         p.setPrecisaCupomFiscal(rs.getBoolean("precisa_cupomfiscal"));
         p.setValorACombinar(rs.getBoolean("valor_a_combinar"));
         p.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
