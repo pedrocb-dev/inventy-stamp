@@ -22,7 +22,7 @@ public class Pedido {
     private boolean dtfMontado;
     private String atendente;
     private String tamanhoPedido;
-    private boolean precisaNotinha;
+    private boolean precisaCupomFiscal;
     private boolean valorACombinar;
 
     public Pedido() {}
@@ -78,8 +78,8 @@ public class Pedido {
     public String getTamanhoPedido() { return tamanhoPedido; }
     public void setTamanhoPedido(String tamanhoPedido) { this.tamanhoPedido = tamanhoPedido; }
 
-    public boolean isPrecisaNotinha() { return precisaNotinha; }
-    public void setPrecisaNotinha(boolean precisaNotinha) { this.precisaNotinha = precisaNotinha; }
+    public boolean isPrecisaCupomFiscal() { return precisaCupomFiscal; }
+    public void setPrecisaCupomFiscal(boolean precisaCupomFiscal) { this.precisaCupomFiscal = precisaCupomFiscal; }
 
     public boolean isValorACombinar() { return valorACombinar; }
     public void setValorACombinar(boolean valorACombinar) { this.valorACombinar = valorACombinar; }

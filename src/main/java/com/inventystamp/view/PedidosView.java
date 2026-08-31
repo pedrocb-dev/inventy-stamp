@@ -361,8 +361,8 @@ public class PedidosView {
         Label lblNF = new Label(p.isPrecisaNf() ? "🧾 Precisa de NF" : "");
         lblNF.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
 
-        Label lblNotinha = new Label(p.isPrecisaNotinha() ? "🧾 Precisa de notinha" : "");
-        lblNotinha.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
+        Label lblCupomFiscal = new Label(p.isPrecisaCupomFiscal() ? "🧾 Precisa de cupom fiscal" : "");
+        lblCupomFiscal.setStyle("-fx-font-size: 13px; -fx-text-fill: #e67e22; -fx-font-weight: bold;");
 
         Label lblTelefone = new Label(p.getClienteTelefone() != null && !p.getClienteTelefone().isBlank() ? "📞 " + p.getClienteTelefone() : "");
         lblTelefone.setStyle("-fx-font-size: 13px; -fx-text-fill: #7f8c8d;");
@@ -393,16 +393,16 @@ public class PedidosView {
         btnImprimir.setStyle("-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
         btnImprimir.setOnAction(e -> imprimirEtiqueta(p));
 
-        Button btnNotinha = new Button("🧾 Notinha");
-        btnNotinha.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
-        btnNotinha.setOnAction(e -> gerarECopiarNotinha(p));
+        Button btnCupomFiscal = new Button("🧾 Cupom Fiscal");
+        btnCupomFiscal.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
+        btnCupomFiscal.setOnAction(e -> gerarECopiarCupomFiscal(p));
 
         Button btnWhatsApp = new Button("💬");
         btnWhatsApp.setTooltip(new Tooltip("Abrir WhatsApp do cliente"));
         btnWhatsApp.setStyle("-fx-background-color: #25D366; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
         btnWhatsApp.setOnAction(e -> abrirWhatsAppCliente(p));
 
-        acoes.getChildren().addAll(btnWhatsApp, btnNotinha, btnImprimir, btnConcluir, btnEditar, btnRemover);
+        acoes.getChildren().addAll(btnWhatsApp, btnCupomFiscal, btnImprimir, btnConcluir, btnEditar, btnRemover);
 
         btnConcluir.setOnAction(e -> {
             p.setSituacao(SituacaoPedido.PRONTO);
@@ -471,7 +471,7 @@ public class PedidosView {
         HBox linhaNome = new HBox(8, lblNome, iconeSinalDtf);
         linhaNome.setAlignment(Pos.CENTER_LEFT);
 
-        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblTelefone, lblEntrega, infoValor, lblPagamento, lblNF, lblNotinha, lblAtendente, lblTamanho);
+        VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblTelefone, lblEntrega, infoValor, lblPagamento, lblNF, lblCupomFiscal, lblAtendente, lblTamanho);
         colunaEsquerda.setPrefWidth(200);
         HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 
@@ -572,10 +572,10 @@ public class PedidosView {
         cbNF.setValue(p.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
         grid.add(new Label("🧾 Nota Fiscal:"), 0, 8); grid.add(cbNF, 1, 8);
 
-        ComboBox<String> cbNotinha = new ComboBox<>();
-        cbNotinha.getItems().addAll("Não precisa de notinha", "Precisa de notinha");
-        cbNotinha.setValue(p.isPrecisaNotinha() ? "Precisa de notinha" : "Não precisa de notinha");
-        grid.add(new Label("🧾 Notinha:"), 0, 9); grid.add(cbNotinha, 1, 9);
+        ComboBox<String> cbCupomFiscal = new ComboBox<>();
+        cbCupomFiscal.getItems().addAll("Não precisa de cupom fiscal", "Precisa de cupom fiscal");
+        cbCupomFiscal.setValue(p.isPrecisaCupomFiscal() ? "Precisa de cupom fiscal" : "Não precisa de cupom fiscal");
+        grid.add(new Label("🧾 Cupom Fiscal:"), 0, 9); grid.add(cbCupomFiscal, 1, 9);
 
         ComboBox<String> cbAtendenteEdicao = new ComboBox<>();
         cbAtendenteEdicao.getItems().addAll("Kennia", "Pedro", "Bia", "Marco");
@@ -611,7 +611,7 @@ public class PedidosView {
                         p.setResta(new java.math.BigDecimal(tfResta.getText()));
                 } catch (Exception ex) {}
                 p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
-                p.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de notinha"));
+                p.setPrecisaCupomFiscal(cbCupomFiscal.getValue().equals("Precisa de Cupom Fiscal"));
                 p.setAtendente(cbAtendenteEdicao.getValue());
                 p.setTamanhoPedido(cbTamanhoEdicao.getValue());
                 return p;
@@ -1022,8 +1022,8 @@ public class PedidosView {
             linhas.add("Atendente: " + p.getAtendente());
         if (p.isPrecisaNf())
             linhas.add("Precisa de NF");
-        if (p.isPrecisaNotinha())
-            linhas.add("Precisa de notinha");
+        if (p.isPrecisaCupomFiscal())
+            linhas.add("Precisa de Cupom Fiscal");
         if (p.getValor() != null)
             linhas.add("Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
         if (p.getResta() != null && p.getStatusPagamento() == StatusPagamento.PARCIAL)
@@ -1140,14 +1140,17 @@ public class PedidosView {
         }
     }
 
-    private void gerarECopiarNotinha(Pedido p) {
+    private void gerarECopiarCupomFiscal(Pedido p) {
         String codigo = extrairCodigo(p.getClienteTelefone());
         String nomeCompleto = p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo);
 
         java.util.List<String> linhas = new java.util.ArrayList<>();
         linhas.add("INVENTY STAMP");
         linhas.add("");
-        linhas.add(nomeCompleto);
+        if (!codigo.isEmpty()) {
+            linhas.add("CODIGO_RETIRADA:" + codigo);
+        }
+        linhas.add(p.getClienteNome());
         if (p.getClienteTelefone() != null && !p.getClienteTelefone().isBlank())
             linhas.add("Tel: " + p.getClienteTelefone());
         linhas.add("");
@@ -1178,12 +1181,17 @@ public class PedidosView {
             for (String linha : linhas) {
                 if (linha.equals("INVENTY STAMP")) {
                     g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
-                } else if (linha.equals(nomeCompleto)) {
+                    g.drawString(linha, 20, y);
+                } else if (linha.startsWith("CODIGO_RETIRADA:")) {
+                    g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 22));
+                    g.drawString("Código de Retirada: " + linha.substring("CODIGO_RETIRADA:".length()), 20, y);
+                } else if (linha.equals(p.getClienteNome())) {
                     g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 16));
+                    g.drawString(linha, 20, y);
                 } else {
                     g.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 14));
+                    g.drawString(linha, 20, y);
                 }
-                g.drawString(linha, 20, y);
                 y += 28;
             }
             g.dispose();
@@ -1209,7 +1217,7 @@ public class PedidosView {
 
         } catch (Exception e) {
             e.printStackTrace();
-            mostrarAlerta("Erro ao gerar notinha: " + e.getMessage());
+            mostrarAlerta("Erro ao gerar Cupom Fiscal: " + e.getMessage());
         }
     }
 
