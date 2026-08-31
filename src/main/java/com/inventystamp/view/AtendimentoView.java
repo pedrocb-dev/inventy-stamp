@@ -27,11 +27,10 @@ public class AtendimentoView {
     private ComboBox<TipoPersonalizacao> cbTipo;
     private ComboBox<StatusPagamento> cbPagamento;
     private ComboBox<String> cbNF;
-    private ComboBox<String> cbNotinha;
+    private ComboBox<String> cbCupomFiscal;
     private TextArea taDemanda;
     private ToggleButton tbMarco, tbSimone;
     private ComboBox<String> cbAtendente;
-    private ComboBox<String> cbTamanhoPedido;
     private DatePicker dpConfirmacao, dpEntrega;
     private VBox campoResta;
     private VBox listaRascunhos;
@@ -282,15 +281,15 @@ public class AtendimentoView {
         cbNF.setMaxWidth(Double.MAX_VALUE);
         cbNF.setStyle("-fx-font-size: 14px;");
 
-        cbNotinha = new ComboBox<>();
-        cbNotinha.getItems().addAll("Não precisa de C. Fiscal", "Precisa de C. Fiscal");
-        cbNotinha.setValue("Não precisa de C. Fiscal");
-        cbNotinha.setMaxWidth(Double.MAX_VALUE);
-        cbNotinha.setStyle("-fx-font-size: 14px;");
+        cbCupomFiscal = new ComboBox<>();
+        cbCupomFiscal.getItems().addAll("Não precisa de C. Fiscal", "Precisa de C. Fiscal");
+        cbCupomFiscal.setValue("Não precisa de C. Fiscal");
+        cbCupomFiscal.setMaxWidth(Double.MAX_VALUE);
+        cbCupomFiscal.setStyle("-fx-font-size: 14px;");
 
         HBox linha5 = new HBox(12,
                 criarCampo("🧾 Nota Fiscal", cbNF),
-                criarCampo("🧾 Cupom Fiscal", cbNotinha)
+                criarCampo("🧾 Cupom Fiscal", cbCupomFiscal)
         );
 
         cbAtendente = new ComboBox<>();
@@ -299,17 +298,8 @@ public class AtendimentoView {
         cbAtendente.setMaxWidth(Double.MAX_VALUE);
         cbAtendente.setStyle("-fx-font-size: 14px;");
 
-        cbTamanhoPedido = new ComboBox<>();
-        cbTamanhoPedido.getItems().addAll(
-                "Pequeno (até 10)", "Médio (até 30)", "Grande (até 50)", "Bem grande (mais de 50)"
-        );
-        cbTamanhoPedido.setPromptText("Selecione...");
-        cbTamanhoPedido.setMaxWidth(Double.MAX_VALUE);
-        cbTamanhoPedido.setStyle("-fx-font-size: 14px;");
-
         HBox linha6 = new HBox(12,
-                criarCampo("👩‍💼 Atendente", cbAtendente),
-                criarCampo("📦 Tamanho do pedido", cbTamanhoPedido)
+                criarCampo("👩‍💼 Atendente", cbAtendente)
         );
 
         Label lblFeedback = new Label();
@@ -439,9 +429,8 @@ public class AtendimentoView {
             p.setStatusPagamento(cbPagamento.getValue());
             p.setSituacao(SituacaoPedido.PREPARANDO);
             p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
+            p.setPrecisaCupomFiscal(cbCupomFiscal.getValue().equals("Precisa de C. Fiscal"));
             p.setAtendente(cbAtendente.getValue());
-            p.setTamanhoPedido(cbTamanhoPedido.getValue());
-            p.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de C. Fiscal"));
 
             p.setValorACombinar(tbACombinar.isSelected());
 
@@ -621,9 +610,8 @@ public class AtendimentoView {
         tfValor.setText(r.getValor() != null ? r.getValor() : "");
         tfResta.setText(r.getResta() != null ? r.getResta() : "");
         cbNF.setValue(r.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
-        cbNotinha.setValue(r.isPrecisaNotinha() ? "Precisa de C. Fiscal" : "Não precisa de C. Fiscal");
+        cbCupomFiscal.setValue(r.isPrecisaCupomFiscal() ? "Precisa de C. Fiscal" : "Não precisa de C. Fiscal");
         cbAtendente.setValue(r.getAtendente());
-        cbTamanhoPedido.setValue(r.getTamanhoPedido());
         taDemanda.setText(r.getDemandaTexto() != null ? r.getDemandaTexto() : "");
         tbMarco.setSelected("MARCO".equals(r.getDemandaDestinatario()));
         tbSimone.setSelected("SIMONE".equals(r.getDemandaDestinatario()));
@@ -646,7 +634,6 @@ public class AtendimentoView {
         cbPagamento.setValue(null);
         cbNF.setValue("Não precisa de NF");
         cbAtendente.setValue(null);
-        cbTamanhoPedido.setValue(null);
         campoResta.setVisible(false);
         campoResta.setManaged(false);
         taDemanda.clear();
@@ -696,9 +683,8 @@ public class AtendimentoView {
         r.setStatusPagamento(cbPagamento.getValue() != null ? cbPagamento.getValue().name() : null);
         r.setResta(tfResta.getText().trim());
         r.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
-        r.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de notinha"));
+        r.setPrecisaCupomFiscal(cbCupomFiscal.getValue().equals("Precisa de C. Fiscal"));
         r.setAtendente(cbAtendente.getValue());
-        r.setTamanhoPedido(cbTamanhoPedido.getValue());
         r.setDemandaTexto(taDemanda.getText().trim());
         r.setDemandaDestinatario(tbMarco.isSelected() ? "MARCO" : tbSimone.isSelected() ? "SIMONE" : null);
         return r;

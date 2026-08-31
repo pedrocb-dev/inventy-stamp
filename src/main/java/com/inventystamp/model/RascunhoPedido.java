@@ -18,7 +18,7 @@ public class RascunhoPedido {
     private String tamanhoPedido;
     private String demandaTexto;
     private String demandaDestinatario;
-    private boolean precisaNotinha;
+    private boolean precisaCupomFiscal;
     private LocalDateTime criadoEm;
 
     public RascunhoPedido() {}
@@ -65,8 +65,8 @@ public class RascunhoPedido {
     public String getDemandaTexto() { return demandaTexto; }
     public void setDemandaTexto(String demandaTexto) { this.demandaTexto = demandaTexto; }
 
-    public boolean isPrecisaNotinha() { return precisaNotinha; }
-    public void setPrecisaNotinha(boolean precisaNotinha) { this.precisaNotinha = precisaNotinha; }
+    public boolean isPrecisaCupomFiscal() { return precisaCupomFiscal; }
+    public void setPrecisaCupomFiscal(boolean precisaCupomFiscal) { this.precisaCupomFiscal = precisaCupomFiscal; }
 
     public String getDemandaDestinatario() { return demandaDestinatario; }
     public void setDemandaDestinatario(String demandaDestinatario) { this.demandaDestinatario = demandaDestinatario; }

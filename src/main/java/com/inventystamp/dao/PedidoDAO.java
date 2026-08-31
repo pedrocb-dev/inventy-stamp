@@ -30,7 +30,7 @@ public class PedidoDAO {
 
     public void salvar(Pedido p) {
         String sql = "INSERT INTO pedidos (cliente_nome, cliente_telefone, anotacao, tipo_personalizacao, " +
-                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado, atendente, tamanho_pedido, precisa_notinha, valor_a_combinar) " +
+                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado, atendente, tamanho_pedido, precisa_cupomfiscal, valor_a_combinar) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
@@ -50,7 +50,7 @@ public class PedidoDAO {
             ps.setBoolean(12, p.isDtfMontado());
             ps.setString(13, p.getAtendente());
             ps.setString(14, p.getTamanhoPedido());
-            ps.setBoolean(15, p.isPrecisaNotinha());
+            ps.setBoolean(15, p.isPrecisaCupomFiscal());
             ps.setBoolean(16, p.isValorACombinar());
             ps.executeUpdate();
 
@@ -65,7 +65,7 @@ public class PedidoDAO {
 
     public void atualizar(Pedido p) {
         String sql = "UPDATE pedidos SET cliente_nome=?, cliente_telefone=?, anotacao=?, tipo_personalizacao=?, " +
-                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, tamanho_pedido=?, precisa_notinha=?, valor_a_combinar=? WHERE id=?";
+                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, tamanho_pedido=?, precisa_cupomfiscal=?, valor_a_combinar=? WHERE id=?";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -85,7 +85,7 @@ public class PedidoDAO {
             ps.setBoolean(13, p.isDtfMontado());
             ps.setString(14, p.getAtendente());
             ps.setString(15, p.getTamanhoPedido());
-            ps.setBoolean(16, p.isPrecisaNotinha());
+            ps.setBoolean(16, p.isPrecisaCupomFiscal());
             ps.setBoolean(17, p.isValorACombinar());
             ps.setInt(18, p.getId());
             ps.executeUpdate();
@@ -127,7 +127,7 @@ public class PedidoDAO {
         p.setDtfMontado(rs.getBoolean("dtf_montado"));
         p.setAtendente(rs.getString("atendente"));
         p.setTamanhoPedido(rs.getString("tamanho_pedido"));
-        p.setPrecisaNotinha(rs.getBoolean("precisa_notinha"));
+        p.setPrecisaCupomFiscal(rs.getBoolean("precisa_cupomfiscal"));
         p.setValorACombinar(rs.getBoolean("valor_a_combinar"));
         p.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
         return p;
