@@ -1123,6 +1123,8 @@ public class PedidosView {
         linhas.add("Personalização: " + p.getTipoPersonalizacao().name());
         if (p.getValor() != null)
             linhas.add("Valor: R$ " + p.getValor().setScale(2, java.math.RoundingMode.HALF_UP));
+        if (p.getResta() != null && p.getStatusPagamento() == StatusPagamento.PARCIAL)
+            linhas.add("Resta: R$ " + p.getResta().setScale(2, java.math.RoundingMode.HALF_UP));
         linhas.add("Pagamento: " + p.getStatusPagamento().name());
         linhas.add("Confirmado em: " + p.getDataConfirmacao().format(fmt));
         linhas.add("Entrega: " + p.getDataEntrega().format(fmt));
