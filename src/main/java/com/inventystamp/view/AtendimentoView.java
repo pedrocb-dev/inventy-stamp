@@ -254,14 +254,14 @@ public class AtendimentoView {
         cbNF.setStyle("-fx-font-size: 14px;");
 
         cbNotinha = new ComboBox<>();
-        cbNotinha.getItems().addAll("Não precisa de notinha", "Precisa de notinha");
-        cbNotinha.setValue("Não precisa de notinha");
+        cbNotinha.getItems().addAll("Não precisa de C. Fiscal", "Precisa de C. Fiscal");
+        cbNotinha.setValue("Não precisa de C. Fiscal");
         cbNotinha.setMaxWidth(Double.MAX_VALUE);
         cbNotinha.setStyle("-fx-font-size: 14px;");
 
         HBox linha5 = new HBox(12,
                 criarCampo("🧾 Nota Fiscal", cbNF),
-                criarCampo("🧾 Notinha", cbNotinha)
+                criarCampo("🧾 Cupom Fiscal", cbNotinha)
         );
 
         cbAtendente = new ComboBox<>();
@@ -412,7 +412,7 @@ public class AtendimentoView {
             p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
             p.setAtendente(cbAtendente.getValue());
             p.setTamanhoPedido(cbTamanhoPedido.getValue());
-            p.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de notinha"));
+            p.setPrecisaNotinha(cbNotinha.getValue().equals("Precisa de C. Fiscal"));
 
             try {
                 if (!tfValor.getText().isBlank())
@@ -588,7 +588,7 @@ public class AtendimentoView {
         tfValor.setText(r.getValor() != null ? r.getValor() : "");
         tfResta.setText(r.getResta() != null ? r.getResta() : "");
         cbNF.setValue(r.isPrecisaNf() ? "Precisa de NF" : "Não precisa de NF");
-        cbNotinha.setValue(r.isPrecisaNotinha() ? "Precisa de notinha" : "Não precisa de notinha");
+        cbNotinha.setValue(r.isPrecisaNotinha() ? "Precisa de C. Fiscal" : "Não precisa de C. Fiscal");
         cbAtendente.setValue(r.getAtendente());
         cbTamanhoPedido.setValue(r.getTamanhoPedido());
         taDemanda.setText(r.getDemandaTexto() != null ? r.getDemandaTexto() : "");

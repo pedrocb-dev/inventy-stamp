@@ -1172,7 +1172,7 @@ public class PedidosView {
             };
             clipboard.setContents(transferableImage, null);
 
-            mostrarAlerta("✅ Notinha copiada! Cole com Ctrl+V.");
+            mostrarAlerta("✅ Noinha copiada! Cole com Ctrl+V.");
 
         } catch (Exception e) {
             e.printStackTrace();
