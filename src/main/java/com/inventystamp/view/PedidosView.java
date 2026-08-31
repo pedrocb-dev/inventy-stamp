@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import com.inventystamp.dao.PecasPedidoDAO;
 
 public class PedidosView {
 
@@ -402,8 +403,40 @@ public class PedidosView {
         acoes.getChildren().addAll(btnWhatsApp, btnCupomFiscal, btnImprimir, btnConcluir, btnEditar, btnRemover);
 
         btnConcluir.setOnAction(e -> {
+            if (p.isValorACombinar() || p.getValor() == null || p.getValor().compareTo(BigDecimal.ZERO) == 0) {
+                mostrarAlerta("⚠ Informe o valor do pedido antes de concluir.");
+                return;
+            }
+
+            TextInputDialog dialogPecas = new TextInputDialog();
+            dialogPecas.setTitle("Quantidade de Peças");
+            dialogPecas.setHeaderText("Quantas peças (exato ou aproximado) tinha este pedido?");
+            dialogPecas.setContentText("Quantidade:");
+
+            java.util.Optional<String> resultadoPecas = dialogPecas.showAndWait();
+            if (resultadoPecas.isEmpty() || resultadoPecas.get().isBlank()) {
+                mostrarAlerta("⚠ Informe a quantidade de peças para concluir o pedido.");
+                return;
+            }
+
+            int quantidadePecas;
+            try {
+                quantidadePecas = Integer.parseInt(resultadoPecas.get().trim());
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("⚠ Digite um número válido de peças.");
+                return;
+            }
+
+            if (quantidadePecas < 1) {
+                mostrarAlerta("⚠ A quantidade de peças deve ser pelo menos 1.");
+                return;
+            }
+
             p.setSituacao(SituacaoPedido.PRONTO);
             pedidoDAO.atualizar(p);
+
+            PecasPedidoDAO pecasDAO = new PecasPedidoDAO();
+            pecasDAO.salvar(java.time.LocalDate.now().getYear(), java.time.LocalDate.now().getMonthValue(), quantidadePecas);
 
             if (p.getValor() != null) {
                 EstatisticaDAO estatisticaDAO = new EstatisticaDAO();
@@ -1123,6 +1156,11 @@ public class PedidosView {
     }
 
     private void gerarECopiarCupomFiscal(Pedido p) {
+        if (p.isValorACombinar() || p.getValor() == null || p.getValor().compareTo(BigDecimal.ZERO) == 0) {
+            mostrarAlerta("⚠ Não é possível gerar o Cupom Fiscal sem um valor informado.");
+            return;
+        }
+
         String codigo = extrairCodigo(p.getClienteTelefone());
         String nomeCompleto = p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo);
 
