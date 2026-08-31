@@ -28,7 +28,7 @@ public class RascunhoDAO {
 
     public void salvar(RascunhoPedido r) {
         String sql = "INSERT INTO rascunhos_pedido (cliente_nome, cliente_telefone, anotacao, " +
-                "tipo_personalizacao, data_confirmacao, data_entrega, valor, status_pagamento, resta, precisa_nf, atendente, tamanho_pedido, demanda_texto, demanda_destinatario, precisa_cupomfiscal) " +
+                "tipo_personalizacao, data_confirmacao, data_entrega, valor, status_pagamento, resta, precisa_nf, atendente, tamanho_pedido, demanda_texto, demanda_destinatario, precisa_notinha) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
@@ -86,10 +86,9 @@ public class RascunhoDAO {
         r.setResta(rs.getString("resta"));
         r.setPrecisaNf(rs.getBoolean("precisa_nf"));
         r.setAtendente(rs.getString("atendente"));
-        r.setTamanhoPedido(rs.getString("tamanho_pedido"));
         r.setDemandaTexto(rs.getString("demanda_texto"));
         r.setDemandaDestinatario(rs.getString("demanda_destinatario"));
-        r.setPrecisaCupomFiscal(rs.getBoolean("precisa_cupomfiscal"));
+        r.setPrecisaCupomFiscal(rs.getBoolean("precisa_notinha"));
         r.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
         return r;
     }
