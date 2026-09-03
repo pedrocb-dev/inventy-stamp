@@ -249,9 +249,13 @@ public class PedidosView {
                     String anotacao = p.getAnotacao() != null ? p.getAnotacao().toLowerCase() : "";
                     String dataEntrega = p.getDataEntrega() != null ? p.getDataEntrega().format(fmt).toLowerCase() : "";
                     String dataConfirmacao = p.getDataConfirmacao() != null ? p.getDataConfirmacao().format(fmt).toLowerCase() : "";
+                    String atendente = p.getAtendente() != null ? p.getAtendente().toLowerCase() : "";
+                    String nf = p.isPrecisaNf() ? "nf nota fiscal" : "";
+                    String cupomFiscal = p.isPrecisaCupomFiscal() ? "cupom fiscal" : "";
                     return nome.contains(textoPesquisa) || codigo.contains(textoPesquisa)
                             || telefone.contains(textoPesquisa) || anotacao.contains(textoPesquisa)
-                            || dataEntrega.contains(textoPesquisa) || dataConfirmacao.contains(textoPesquisa);
+                            || dataEntrega.contains(textoPesquisa) || dataConfirmacao.contains(textoPesquisa)
+                            || atendente.contains(textoPesquisa) || nf.contains(textoPesquisa) || cupomFiscal.contains(textoPesquisa);
                 })
                 .sorted((a, b) -> a.getDataEntrega().compareTo(b.getDataEntrega()))
                 .toList();
