@@ -446,20 +446,16 @@ public class PedidosView {
                 est.setLucroBruto(p.getValor());
                 est.setLucroBordado(BigDecimal.ZERO);
                 est.setLucroDtf(BigDecimal.ZERO);
-                est.setLucroPlotter(BigDecimal.ZERO);
                 est.setLucroSublimacao(BigDecimal.ZERO);
-                est.setLucroTransfer(BigDecimal.ZERO);
                 est.setLucroSilkscreen(BigDecimal.ZERO);
-                est.setLucroSemPersonalizacao(BigDecimal.ZERO);
+                est.setLucroBrindes(BigDecimal.ZERO);
 
                 switch (p.getTipoPersonalizacao()) {
                     case BORDADO -> est.setLucroBordado(p.getValor());
                     case DTF -> est.setLucroDtf(p.getValor());
-                    case PLOTTER -> est.setLucroPlotter(p.getValor());
                     case SUBLIMACAO -> est.setLucroSublimacao(p.getValor());
-                    case TRANSFER -> est.setLucroTransfer(p.getValor());
                     case SILKSCREEN -> est.setLucroSilkscreen(p.getValor());
-                    case SEM_PERSONALIZACAO -> est.setLucroSemPersonalizacao(p.getValor());
+                    case BRINDES -> est.setLucroBrindes(p.getValor());
                 }
 
                 estatisticaDAO.salvarOuAtualizar(est);

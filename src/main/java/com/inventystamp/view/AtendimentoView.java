@@ -195,13 +195,8 @@ public class AtendimentoView {
         VBox campoAnotacao = criarCampo("📝 Anotação", taAnotacao);
 
         cbTipo = new ComboBox<>();
-        cbTipo.getItems().addAll(TipoPersonalizacao.SEM_PERSONALIZACAO);
-        for (TipoPersonalizacao t : TipoPersonalizacao.values()) {
-            if (t != TipoPersonalizacao.SEM_PERSONALIZACAO) {
-                cbTipo.getItems().add(t);
-            }
-        }
-        cbTipo.setValue(TipoPersonalizacao.SEM_PERSONALIZACAO);
+        cbTipo.getItems().addAll(TipoPersonalizacao.values());
+        cbTipo.setValue(TipoPersonalizacao.DTF);
         cbTipo.setMaxWidth(Double.MAX_VALUE);
         cbTipo.setStyle("-fx-font-size: 14px;");
 

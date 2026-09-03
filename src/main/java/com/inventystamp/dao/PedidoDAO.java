@@ -30,7 +30,7 @@ public class PedidoDAO {
 
     public void salvar(Pedido p) {
         String sql = "INSERT INTO pedidos (cliente_nome, cliente_telefone, anotacao, tipo_personalizacao, " +
-                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado, atendente, precisa_notinha, valor_a_combinar) " +
+                "data_confirmacao, data_entrega, valor, status_pagamento, situacao, resta, precisa_nf, dtf_montado, atendente, precisa_cupomfiscal, valor_a_combinar) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
@@ -64,7 +64,7 @@ public class PedidoDAO {
 
     public void atualizar(Pedido p) {
         String sql = "UPDATE pedidos SET cliente_nome=?, cliente_telefone=?, anotacao=?, tipo_personalizacao=?, " +
-                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, precisa_notinha=?, valor_a_combinar=? WHERE id=?";
+                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, precisa_cupomfiscal=?, valor_a_combinar=? WHERE id=?";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -124,7 +124,7 @@ public class PedidoDAO {
         p.setPrecisaNf(rs.getBoolean("precisa_nf"));
         p.setDtfMontado(rs.getBoolean("dtf_montado"));
         p.setAtendente(rs.getString("atendente"));
-        p.setPrecisaCupomFiscal(rs.getBoolean("precisa_notinha"));
+        p.setPrecisaCupomFiscal(rs.getBoolean("precisa_cupomfiscal"));
         p.setValorACombinar(rs.getBoolean("valor_a_combinar"));
         p.setCriadoEm(rs.getTimestamp("criado_em").toLocalDateTime());
         return p;

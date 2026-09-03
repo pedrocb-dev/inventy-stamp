@@ -48,7 +48,6 @@ public class EstatisticasView {
 
         indiceAtual = estatisticas.size() - 1;
 
-        // Navegação
         Button btnAnterior = new Button("◀ Anterior");
         btnAnterior.setStyle(
                 "-fx-background-color: #3498db; -fx-text-fill: white; " +
@@ -109,7 +108,7 @@ public class EstatisticasView {
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);"
         );
 
-        // Gráfico de linha — evolução do lucro bruto
+        // Gráfico de barras — evolução do lucro bruto
         Label lblGraficoLinha = new Label("📈 Evolução do Lucro Bruto");
         lblGraficoLinha.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
@@ -130,58 +129,43 @@ public class EstatisticasView {
         }
         lineChart.getData().add(series);
 
-        // Gráfico de pizza — bordado vs outros
-        Label lblGraficoPizza = new Label("🥧 Lucro por Tipo de Personalização");
-        lblGraficoPizza.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-
         // Gráfico de barras — lucro por personalização
+        Label lblGraficoPersonalizacao = new Label("📊 Lucro por Personalização");
+        lblGraficoPersonalizacao.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
         CategoryAxis xAxisLucro = new CategoryAxis();
         xAxisLucro.setTickLabelRotation(0);
         NumberAxis yAxisLucro = new NumberAxis();
         yAxisLucro.setLabel("R$");
 
-        BarChart<String, Number> pieChart = new BarChart<>(xAxisLucro, yAxisLucro);
-        pieChart.setPrefSize(420, 320);
-        pieChart.setMinSize(420, 320);
-        pieChart.setMaxSize(420, 320);
-        pieChart.setLegendVisible(false);
+        BarChart<String, Number> graficoPersonalizacao = new BarChart<>(xAxisLucro, yAxisLucro);
+        graficoPersonalizacao.setPrefSize(500, 320);
+        graficoPersonalizacao.setMinSize(500, 320);
+        graficoPersonalizacao.setMaxSize(500, 320);
+        graficoPersonalizacao.setLegendVisible(false);
 
         XYChart.Series<String, Number> serieLucro = new XYChart.Series<>();
         adicionarBarraLucro(serieLucro, "Bordado", e.getLucroBordado());
         adicionarBarraLucro(serieLucro, "DTF", e.getLucroDtf());
-        adicionarBarraLucro(serieLucro, "Plotter", e.getLucroPlotter());
         adicionarBarraLucro(serieLucro, "Sublimação", e.getLucroSublimacao());
-        adicionarBarraLucro(serieLucro, "Transfer", e.getLucroTransfer());
         adicionarBarraLucro(serieLucro, "Silkscreen", e.getLucroSilkscreen());
-        adicionarBarraLucro(serieLucro, "Sem person.", e.getLucroSemPersonalizacao());
-        pieChart.getData().add(serieLucro);
-        instalarTooltipsBarras(pieChart, true);
+        adicionarBarraLucro(serieLucro, "Brindes", e.getLucroBrindes());
+        graficoPersonalizacao.getData().add(serieLucro);
+        instalarTooltipsBarras(graficoPersonalizacao, true);
 
-// Gráfico de barras — tamanhos de pedido
-        Label lblGraficoTamanhos = new Label("📊 Pedidos por Tamanho");
-        lblGraficoTamanhos.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        VBox blocoPersonalizacao = new VBox(10, lblGraficoPersonalizacao, graficoPersonalizacao);
+        blocoPersonalizacao.setPadding(new Insets(20));
+        blocoPersonalizacao.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(blocoPersonalizacao, Priority.ALWAYS);
+        blocoPersonalizacao.setStyle(
+                "-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
+                        "-fx-border-color: #dcdde1; -fx-border-radius: 10;"
+        );
 
-        CategoryAxis xAxisTamanho = new CategoryAxis();
-        NumberAxis yAxisTamanho = new NumberAxis();
-        yAxisTamanho.setLabel("Quantidade");
+        HBox linhaGraficos = new HBox(40, blocoPersonalizacao);
+        linhaGraficos.setAlignment(Pos.TOP_LEFT);
+        linhaGraficos.setMaxWidth(Double.MAX_VALUE);
 
-        BarChart<String, Number> graficoRosca = new BarChart<>(xAxisTamanho, yAxisTamanho);
-        graficoRosca.setPrefSize(420, 320);
-        graficoRosca.setMinSize(420, 320);
-        graficoRosca.setMaxSize(420, 320);
-        graficoRosca.setLegendVisible(false);
-
-        XYChart.Series<String, Number> serieTamanho = new XYChart.Series<>();
-        adicionarBarraQuantidade(serieTamanho, "Pequeno\n(até 10)", e.getQtdPequeno());
-        adicionarBarraQuantidade(serieTamanho, "Médio\n(até 30)", e.getQtdMedio());
-        adicionarBarraQuantidade(serieTamanho, "Grande\n(até 50)", e.getQtdGrande());
-        adicionarBarraQuantidade(serieTamanho, "Bem grande\n(+50)", e.getQtdBemGrande());
-        graficoRosca.getData().add(serieTamanho);
-        instalarTooltipsBarras(graficoRosca, false);
-
-        StackPane containerRosca = new StackPane(graficoRosca);
-
-        // Separador
         Separator sep1 = new Separator();
         Separator sep2 = new Separator();
 
@@ -190,7 +174,6 @@ public class EstatisticasView {
                 e.getLucroBruto().setScale(2, RoundingMode.HALF_UP));
         lblLucroBruto.setStyle("-fx-font-size: 15px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
 
-        // Calcula lucro líquido
         List<Gasto> gastos = dao.listarGastos(e.getId());
         BigDecimal totalGastos = gastos.stream()
                 .map(Gasto::getValor)
@@ -205,44 +188,20 @@ public class EstatisticasView {
                 totalGastos.setScale(2, RoundingMode.HALF_UP));
         lblTotalGastos.setStyle("-fx-font-size: 15px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
 
-        // Botão adicionar gasto
         Button btnAdicionarGasto = new Button("➕ Adicionar Gasto");
         btnAdicionarGasto.setStyle(
                 "-fx-background-color: #e67e22; -fx-text-fill: white; " +
                         "-fx-background-radius: 6; -fx-font-size: 13px;"
         );
-        btnAdicionarGasto.setOnAction(ev -> abrirDialogGasto(e, lblLucroLiquido, lblTotalGastos, gastos));
 
-        // Lista de gastos
         VBox listaGastos = new VBox(6);
         listaGastos.setPadding(new Insets(8, 0, 0, 0));
         atualizarListaGastos(listaGastos, gastos, e, lblLucroLiquido, lblTotalGastos);
 
+        btnAdicionarGasto.setOnAction(ev -> abrirDialogGasto(e, lblLucroLiquido, lblTotalGastos, gastos));
+
         HBox rodape = new HBox(20, lblLucroBruto, lblLucroLiquido, lblTotalGastos, btnAdicionarGasto);
         rodape.setAlignment(Pos.CENTER_LEFT);
-
-        VBox blocoPizza = new VBox(10, lblGraficoPizza, pieChart);
-        blocoPizza.setPadding(new Insets(20));
-        blocoPizza.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(blocoPizza, Priority.ALWAYS);
-        blocoPizza.setStyle(
-                "-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
-                        "-fx-border-color: #dcdde1; -fx-border-radius: 10;"
-        );
-
-        VBox blocoRosca = new VBox(10, lblGraficoTamanhos, containerRosca);
-        blocoRosca.setPadding(new Insets(20));
-        blocoRosca.setAlignment(Pos.TOP_RIGHT);
-        blocoRosca.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(blocoRosca, Priority.ALWAYS);
-        blocoRosca.setStyle(
-                "-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
-                        "-fx-border-color: #dcdde1; -fx-border-radius: 10;"
-        );
-
-        HBox linhaGraficos = new HBox(40, blocoPizza, blocoRosca);
-        linhaGraficos.setAlignment(Pos.TOP_LEFT);
-        linhaGraficos.setMaxWidth(Double.MAX_VALUE);
 
         cardAtual.getChildren().addAll(
                 lblGraficoLinha, lineChart,
@@ -355,17 +314,8 @@ public class EstatisticasView {
         }
     }
 
-    public VBox getView() {
-
-        return root;
-    }
-
     private void adicionarBarraLucro(XYChart.Series<String, Number> serie, String nome, BigDecimal valor) {
         serie.getData().add(new XYChart.Data<>(nome, valor.doubleValue()));
-    }
-
-    private void adicionarBarraQuantidade(XYChart.Series<String, Number> serie, String nome, int quantidade) {
-        serie.getData().add(new XYChart.Data<>(nome, quantidade));
     }
 
     private void instalarTooltipsBarras(BarChart<String, Number> chart, boolean valorEmReais) {
@@ -381,5 +331,9 @@ public class EstatisticasView {
                 }
             }
         });
+    }
+
+    public VBox getView() {
+        return root;
     }
 }
