@@ -436,6 +436,21 @@ public class PedidosView {
                 return;
             }
 
+            Alert dialogOrigem = new Alert(Alert.AlertType.CONFIRMATION);
+            dialogOrigem.setTitle("Origem das Peças");
+            dialogOrigem.setHeaderText("As peças eram nossas, do cliente, ou ambos?");
+            ButtonType btnNossas = new ButtonType("Nossas");
+            ButtonType btnCliente = new ButtonType("Do Cliente");
+            ButtonType btnAmbos = new ButtonType("Ambos");
+            dialogOrigem.getButtonTypes().setAll(btnNossas, btnCliente, btnAmbos);
+
+            java.util.Optional<ButtonType> resultadoOrigem = dialogOrigem.showAndWait();
+            if (resultadoOrigem.isEmpty()) {
+                mostrarAlerta("⚠ Informe a origem das peças para concluir o pedido.");
+                return;
+            }
+            String origemPecas = resultadoOrigem.get().getText();
+
             p.setSituacao(SituacaoPedido.PRONTO);
             pedidoDAO.atualizar(p);
 
@@ -460,6 +475,12 @@ public class PedidosView {
                     case SUBLIMACAO -> est.setLucroSublimacao(p.getValor());
                     case SILKSCREEN -> est.setLucroSilkscreen(p.getValor());
                     case BRINDES -> est.setLucroBrindes(p.getValor());
+                }
+
+                switch (origemPecas) {
+                    case "Nossas" -> est.setQtdPedidosPecasNossas(1);
+                    case "Do Cliente" -> est.setQtdPedidosPecasCliente(1);
+                    case "Ambos" -> est.setQtdPedidosPecasAmbos(1);
                 }
 
                 estatisticaDAO.salvarOuAtualizar(est);
