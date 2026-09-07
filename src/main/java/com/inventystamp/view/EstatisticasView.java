@@ -15,6 +15,7 @@ import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
+import com.inventystamp.dao.PecasPedidoDAO;
 
 public class EstatisticasView {
 
@@ -162,12 +163,87 @@ public class EstatisticasView {
                         "-fx-border-color: #dcdde1; -fx-border-radius: 10;"
         );
 
-        HBox linhaGraficos = new HBox(40, blocoPersonalizacao);
+        // Histograma de peças por pedido
+        Label lblGraficoPecas = new Label("📦 Peças por Pedido");
+        lblGraficoPecas.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        CategoryAxis xAxisPecas = new CategoryAxis();
+        NumberAxis yAxisPecas = new NumberAxis();
+        yAxisPecas.setLabel("Qtd. de pedidos");
+
+        BarChart<String, Number> graficoPecas = new BarChart<>(xAxisPecas, yAxisPecas);
+        graficoPecas.setPrefSize(500, 320);
+        graficoPecas.setMinSize(500, 320);
+        graficoPecas.setMaxSize(500, 320);
+        graficoPecas.setLegendVisible(false);
+
+        PecasPedidoDAO pecasDAO = new PecasPedidoDAO();
+        List<Integer> pecasDoMes = pecasDAO.listarPorMes(e.getAno(), e.getMes());
+
+        int[] faixas = new int[6]; // 1-10, 11-20, 21-30, 31-40, 41-50, 51+
+        for (int qtd : pecasDoMes) {
+            if (qtd <= 10) faixas[0]++;
+            else if (qtd <= 20) faixas[1]++;
+            else if (qtd <= 30) faixas[2]++;
+            else if (qtd <= 40) faixas[3]++;
+            else if (qtd <= 50) faixas[4]++;
+            else faixas[5]++;
+        }
+
+        String[] nomesFaixas = {"1-10", "11-20", "21-30", "31-40", "41-50", "51+"};
+        XYChart.Series<String, Number> seriePecas = new XYChart.Series<>();
+        for (int i = 0; i < faixas.length; i++) {
+            seriePecas.getData().add(new XYChart.Data<>(nomesFaixas[i], faixas[i]));
+        }
+        graficoPecas.getData().add(seriePecas);
+        instalarTooltipsBarras(graficoPecas, false);
+
+        VBox blocoPecas = new VBox(10, lblGraficoPecas, graficoPecas);
+        blocoPecas.setPadding(new Insets(20));
+        blocoPecas.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(blocoPecas, Priority.ALWAYS);
+        blocoPecas.setStyle(
+                "-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
+                        "-fx-border-color: #dcdde1; -fx-border-radius: 10;"
+        );
+
+        HBox linhaGraficos = new HBox(40, blocoPersonalizacao, blocoPecas);
         linhaGraficos.setAlignment(Pos.TOP_LEFT);
         linhaGraficos.setMaxWidth(Double.MAX_VALUE);
 
         Separator sep1 = new Separator();
         Separator sep2 = new Separator();
+        Separator sep3 = new Separator();
+
+// Gráfico de origem das peças
+        Label lblGraficoOrigem = new Label("🧵 Origem das Peças");
+        lblGraficoOrigem.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        CategoryAxis xAxisOrigem = new CategoryAxis();
+        NumberAxis yAxisOrigem = new NumberAxis();
+        yAxisOrigem.setLabel("Qtd. de pedidos");
+
+        BarChart<String, Number> graficoOrigem = new BarChart<>(xAxisOrigem, yAxisOrigem);
+        graficoOrigem.setPrefSize(500, 320);
+        graficoOrigem.setMinSize(500, 320);
+        graficoOrigem.setMaxSize(500, 320);
+        graficoOrigem.setLegendVisible(false);
+
+        XYChart.Series<String, Number> serieOrigem = new XYChart.Series<>();
+        serieOrigem.getData().add(new XYChart.Data<>("Nossas", e.getQtdPedidosPecasNossas()));
+        serieOrigem.getData().add(new XYChart.Data<>("Do Cliente", e.getQtdPedidosPecasCliente()));
+        serieOrigem.getData().add(new XYChart.Data<>("Ambos", e.getQtdPedidosPecasAmbos()));
+        graficoOrigem.getData().add(serieOrigem);
+        instalarTooltipsBarras(graficoOrigem, false);
+
+        VBox blocoOrigem = new VBox(10, lblGraficoOrigem, graficoOrigem);
+        blocoOrigem.setPadding(new Insets(20));
+        blocoOrigem.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(blocoOrigem, Priority.ALWAYS);
+        blocoOrigem.setStyle(
+                "-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
+                        "-fx-border-color: #dcdde1; -fx-border-radius: 10;"
+        );
 
         // Lucro bruto e líquido
         Label lblLucroBruto = new Label("💰 Lucro Bruto: R$ " +
@@ -207,6 +283,8 @@ public class EstatisticasView {
                 lblGraficoLinha, lineChart,
                 sep1,
                 linhaGraficos,
+                sep3,
+                blocoOrigem,
                 sep2,
                 rodape, listaGastos
         );
