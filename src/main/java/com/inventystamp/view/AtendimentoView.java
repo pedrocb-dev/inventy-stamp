@@ -13,10 +13,11 @@ import java.util.List;
 import java.math.BigDecimal;
 import com.inventystamp.dao.DemandaPedidoDAO;
 import com.inventystamp.model.DemandaPedido;
+import com.inventystamp.controller.PedidoController;
 
 public class AtendimentoView {
 
-    private final PedidoDAO pedidoDAO = new PedidoDAO();
+    private final PedidoController pedidoController = new PedidoController();
     private final RascunhoDAO rascunhoDAO = new RascunhoDAO();
     private VBox root;
     private final DateTimeFormatter fmtSql = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -407,62 +408,34 @@ public class AtendimentoView {
         botaoBox.setAlignment(Pos.CENTER_LEFT);
 
         btnSalvar.setOnAction(e -> {
-            if (tfNome.getText().isBlank() || cbTipo.getValue() == null ||
-                    dpEntrega.getValue() == null || cbPagamento.getValue() == null) {
-                lblFeedback.setText("⚠ Preencha todos os campos obrigatórios (*).");
+            String destinatarioDemanda = tbMarco.isSelected() ? "MARCO" : tbSimone.isSelected() ? "SIMONE" : null;
+
+            PedidoController.ResultadoSalvar resultado = pedidoController.salvarPedido(
+                    tfNome.getText(),
+                    tfTelefone.getText(),
+                    taAnotacao.getText(),
+                    cbTipo.getValue(),
+                    dpConfirmacao.getValue(),
+                    dpEntrega.getValue(),
+                    cbPagamento.getValue(),
+                    tfValor.getText(),
+                    tbACombinar.isSelected(),
+                    tfResta.getText(),
+                    cbNF.getValue().equals("Precisa de NF"),
+                    cbCupomFiscal.getValue().equals("Precisa de C. Fiscal"),
+                    cbAtendente.getValue(),
+                    taDemanda.getText(),
+                    destinatarioDemanda
+            );
+
+            if (!resultado.sucesso) {
+                lblFeedback.setText(resultado.mensagem);
                 lblFeedback.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px;");
                 return;
-            }
-
-            Pedido p = new Pedido();
-            p.setClienteNome(tfNome.getText().trim());
-            p.setClienteTelefone(tfTelefone.getText().trim());
-            p.setAnotacao(taAnotacao.getText().trim());
-            p.setTipoPersonalizacao(cbTipo.getValue());
-            p.setDataConfirmacao(dpConfirmacao.getValue());
-            p.setDataEntrega(dpEntrega.getValue());
-            p.setStatusPagamento(cbPagamento.getValue());
-            p.setSituacao(SituacaoPedido.PREPARANDO);
-            p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
-            p.setPrecisaCupomFiscal(cbCupomFiscal.getValue().equals("Precisa de C. Fiscal"));
-            p.setAtendente(cbAtendente.getValue());
-
-            p.setValorACombinar(tbACombinar.isSelected());
-
-            if (!tbACombinar.isSelected()) {
-                try {
-                    if (!tfValor.getText().isBlank())
-                        p.setValor(new BigDecimal(tfValor.getText().replace(",", ".")));
-                } catch (Exception ex) {
-                    lblFeedback.setText("⚠ Valor inválido. Use o formato: 65.00");
-                    lblFeedback.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px;");
-                    return;
-                }
-            }
-
-            try {
-                if (cbPagamento.getValue() == StatusPagamento.PARCIAL && !tfResta.getText().isBlank())
-                    p.setResta(new BigDecimal(tfResta.getText().replace(",", ".")));
-            } catch (Exception ex) {
-                lblFeedback.setText("⚠ Valor de 'Resta' inválido. Use o formato: 32.50");
-                lblFeedback.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px;");
-                return;
-            }
-
-            pedidoDAO.salvar(p);
-
-            if (!taDemanda.getText().isBlank() && (tbMarco.isSelected() || tbSimone.isSelected())) {
-                DemandaPedidoDAO demandaDAO = new DemandaPedidoDAO();
-                DemandaPedido demanda = new DemandaPedido();
-                demanda.setPedidoId(p.getId());
-                demanda.setDestinatario(tbMarco.isSelected() ? "MARCO" : "SIMONE");
-                demanda.setTexto(taDemanda.getText().trim());
-                demandaDAO.salvar(demanda);
             }
 
             limparFormulario();
-
-            lblFeedback.setText("✅ Pedido salvo com sucesso!");
+            lblFeedback.setText(resultado.mensagem);
             lblFeedback.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 14px;");
         });
 
