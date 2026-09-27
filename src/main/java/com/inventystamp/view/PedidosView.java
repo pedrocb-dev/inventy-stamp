@@ -1,8 +1,7 @@
 package com.inventystamp.view;
 
-import com.inventystamp.dao.PedidoDAO;
-import com.inventystamp.dao.DemandaPedidoDAO;
-import com.inventystamp.dao.EstatisticaDAO;
+import com.inventystamp.controller.DemandaController;
+import com.inventystamp.controller.PedidoController;
 import com.inventystamp.model.*;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
@@ -11,17 +10,15 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import com.inventystamp.dao.PecasPedidoDAO;
 
 public class PedidosView {
 
-    private final PedidoDAO pedidoDAO = new PedidoDAO();
-    private final DemandaPedidoDAO demandaPedidoDAO = new DemandaPedidoDAO();
+    private final PedidoController pedidoController = new PedidoController();
+    private final DemandaController demandaController = new DemandaController();
 
     private VBox root;
     private StackPane conteudoPaginas;
@@ -222,7 +219,7 @@ public class PedidosView {
     private void carregarPedidos() {
         gridPedidos.getChildren().clear();
 
-        List<Pedido> todosPedidosAtivos = pedidoDAO.listarTodos().stream()
+        List<Pedido> todosPedidosAtivos = pedidoController.listarPedidos().stream()
                 .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
                 .toList();
 
@@ -326,7 +323,7 @@ public class PedidosView {
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.YES) {
                     p.setDtfMontado(true);
-                    pedidoDAO.atualizar(p);
+                    pedidoController.editarPedido(p);
                     iconeSinalDtf.setVisible(false);
                     iconeSinalDtf.setManaged(false);
                     carregarPedidos();
@@ -407,8 +404,9 @@ public class PedidosView {
         acoes.getChildren().addAll(btnWhatsApp, btnCupomFiscal, btnImprimir, btnConcluir, btnEditar, btnRemover);
 
         btnConcluir.setOnAction(e -> {
-            if (p.isValorACombinar() || p.getValor() == null || p.getValor().compareTo(BigDecimal.ZERO) == 0) {
-                mostrarAlerta("⚠ Informe o valor do pedido antes de concluir.");
+            String erroValor = pedidoController.validarConclusao(p);
+            if (erroValor != null) {
+                mostrarAlerta(erroValor);
                 return;
             }
 
@@ -431,60 +429,13 @@ public class PedidosView {
                 return;
             }
 
-            if (quantidadePecas < 1) {
-                mostrarAlerta("⚠ A quantidade de peças deve ser pelo menos 1.");
+            String erroPecas = pedidoController.validarQuantidadePecas(quantidadePecas);
+            if (erroPecas != null) {
+                mostrarAlerta(erroPecas);
                 return;
             }
 
-            Alert dialogOrigem = new Alert(Alert.AlertType.CONFIRMATION);
-            dialogOrigem.setTitle("Origem das Peças");
-            dialogOrigem.setHeaderText("As peças eram nossas, do cliente, ou ambos?");
-            ButtonType btnNossas = new ButtonType("Nossas");
-            ButtonType btnCliente = new ButtonType("Do Cliente");
-            ButtonType btnAmbos = new ButtonType("Ambos");
-            dialogOrigem.getButtonTypes().setAll(btnNossas, btnCliente, btnAmbos);
-
-            java.util.Optional<ButtonType> resultadoOrigem = dialogOrigem.showAndWait();
-            if (resultadoOrigem.isEmpty()) {
-                mostrarAlerta("⚠ Informe a origem das peças para concluir o pedido.");
-                return;
-            }
-            String origemPecas = resultadoOrigem.get().getText();
-
-            p.setSituacao(SituacaoPedido.PRONTO);
-            pedidoDAO.atualizar(p);
-
-            PecasPedidoDAO pecasDAO = new PecasPedidoDAO();
-            pecasDAO.salvar(java.time.LocalDate.now().getYear(), java.time.LocalDate.now().getMonthValue(), quantidadePecas);
-
-            if (p.getValor() != null) {
-                EstatisticaDAO estatisticaDAO = new EstatisticaDAO();
-                EstatisticasMes est = new EstatisticasMes();
-                est.setAno(java.time.LocalDate.now().getYear());
-                est.setMes(java.time.LocalDate.now().getMonthValue());
-                est.setLucroBruto(p.getValor());
-                est.setLucroBordado(BigDecimal.ZERO);
-                est.setLucroDtf(BigDecimal.ZERO);
-                est.setLucroSublimacao(BigDecimal.ZERO);
-                est.setLucroSilkscreen(BigDecimal.ZERO);
-                est.setLucroBrindes(BigDecimal.ZERO);
-
-                switch (p.getTipoPersonalizacao()) {
-                    case BORDADO -> est.setLucroBordado(p.getValor());
-                    case DTF -> est.setLucroDtf(p.getValor());
-                    case SUBLIMACAO -> est.setLucroSublimacao(p.getValor());
-                    case SILKSCREEN -> est.setLucroSilkscreen(p.getValor());
-                    case BRINDES -> est.setLucroBrindes(p.getValor());
-                }
-
-                switch (origemPecas) {
-                    case "Nossas" -> est.setQtdPedidosPecasNossas(1);
-                    case "Do Cliente" -> est.setQtdPedidosPecasCliente(1);
-                    case "Ambos" -> est.setQtdPedidosPecasAmbos(1);
-                }
-
-                estatisticaDAO.salvarOuAtualizar(est);
-            }
+            pedidoController.concluirPedido(p, quantidadePecas);
 
             card.setStyle(
                     "-fx-background-color: #d5f5e3; -fx-background-radius: 8; " +
@@ -506,7 +457,7 @@ public class PedidosView {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Cancelar pedido de " + p.getClienteNome() + "?");
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.OK) {
-                    pedidoDAO.deletar(p.getId());
+                    pedidoController.removerPedido(p.getId());
                     carregarPedidos();
                 }
             });
@@ -648,7 +599,7 @@ public class PedidosView {
                         p.setResta(new java.math.BigDecimal(tfResta.getText()));
                 } catch (Exception ex) {}
                 p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
-                p.setPrecisaCupomFiscal(cbCupomFiscal.getValue().equals("Precisa de Cupom Fiscal"));
+                p.setPrecisaCupomFiscal(cbCupomFiscal.getValue().equals("Precisa de cupom fiscal"));
                 p.setAtendente(cbAtendenteEdicao.getValue());
                 return p;
             }
@@ -656,7 +607,7 @@ public class PedidosView {
         });
 
         dialog.showAndWait().ifPresent(pedidoAtualizado -> {
-            pedidoDAO.atualizar(pedidoAtualizado);
+            pedidoController.editarPedido(pedidoAtualizado);
             carregarPedidos();
         });
     }
@@ -756,7 +707,7 @@ public class PedidosView {
         if (gridDemandas == null) return;
         gridDemandas.getChildren().clear();
 
-        List<DemandaPedido> todasDemandas = demandaPedidoDAO.listarTodas();
+        List<DemandaPedido> todasDemandas = demandaController.listarDemandas();
 
         if (lblContadorDemandas != null) {
             int total = todasDemandas.size();
@@ -848,7 +799,7 @@ public class PedidosView {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Cancelar esta demanda?");
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.OK) {
-                    demandaPedidoDAO.deletar(d.getId());
+                    demandaController.removerDemanda(d.getId());
                     carregarDemandas();
                 }
             });
@@ -861,7 +812,7 @@ public class PedidosView {
     }
 
     private void abrirEdicaoDemanda(DemandaPedido d) {
-        Dialog<DemandaPedido> dialog = new Dialog<>();
+        Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Editar Demanda");
 
         TextArea taTexto = new TextArea(d.getTexto());
@@ -881,18 +832,11 @@ public class PedidosView {
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        dialog.setResultConverter(btn -> {
+        dialog.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
-                d.setTexto(taTexto.getText().trim());
-                d.setDestinatario(cbDestinatario.getValue());
-                return d;
+                demandaController.editarDemanda(d, taTexto.getText(), cbDestinatario.getValue());
+                carregarDemandas();
             }
-            return null;
-        });
-
-        dialog.showAndWait().ifPresent(demandaAtualizada -> {
-            demandaPedidoDAO.atualizar(demandaAtualizada);
-            carregarDemandas();
         });
     }
 
@@ -919,18 +863,7 @@ public class PedidosView {
 
         Runnable atualizarResultados = () -> {
             resultados.getChildren().clear();
-            String texto = tfBusca.getText().toLowerCase().trim();
-            List<Pedido> pedidos = pedidoDAO.listarTodos().stream()
-                    .filter(p -> p.getSituacao() != SituacaoPedido.PRONTO)
-                    .filter(p -> {
-                        if (texto.isBlank()) return true;
-                        String nome = p.getClienteNome() != null ? p.getClienteNome().toLowerCase() : "";
-                        String codigo = extrairCodigo(p.getClienteTelefone()).toLowerCase();
-                        String data = p.getDataEntrega() != null ? p.getDataEntrega().format(fmt).toLowerCase() : "";
-                        return nome.contains(texto) || codigo.contains(texto) || data.contains(texto);
-                    })
-                    .sorted((a, b) -> a.getDataEntrega().compareTo(b.getDataEntrega()))
-                    .toList();
+            List<Pedido> pedidos = demandaController.buscarPedidosParaVincular(tfBusca.getText(), fmt);
 
             if (pedidos.isEmpty()) {
                 Label vazio = new Label("Nenhum pedido encontrado.");
@@ -965,7 +898,7 @@ public class PedidosView {
     }
 
     private void abrirFormularioNovaDemanda(Pedido p) {
-        Dialog<DemandaPedido> dialog = new Dialog<>();
+        Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Nova Demanda para " + p.getClienteNome());
 
         TextArea taTexto = new TextArea();
@@ -986,20 +919,15 @@ public class PedidosView {
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        dialog.setResultConverter(btn -> {
-            if (btn == ButtonType.OK && !taTexto.getText().isBlank() && cbDestinatario.getValue() != null) {
-                DemandaPedido d = new DemandaPedido();
-                d.setPedidoId(p.getId());
-                d.setTexto(taTexto.getText().trim());
-                d.setDestinatario(cbDestinatario.getValue());
-                return d;
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                String erro = demandaController.salvarNovaDemanda(p.getId(), taTexto.getText(), cbDestinatario.getValue());
+                if (erro != null) {
+                    mostrarAlerta(erro);
+                    return;
+                }
+                carregarDemandas();
             }
-            return null;
-        });
-
-        dialog.showAndWait().ifPresent(demanda -> {
-            demandaPedidoDAO.salvar(demanda);
-            carregarDemandas();
         });
     }
 
@@ -1183,7 +1111,6 @@ public class PedidosView {
         }
 
         String codigo = extrairCodigo(p.getClienteTelefone());
-        String nomeCompleto = p.getClienteNome() + (codigo.isEmpty() ? "" : " " + codigo);
 
         java.util.List<String> linhas = new java.util.ArrayList<>();
         linhas.add("INVENTY STAMP");
