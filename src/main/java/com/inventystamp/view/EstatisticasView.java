@@ -130,29 +130,23 @@ public class EstatisticasView {
         }
         lineChart.getData().add(series);
 
-        // Gráfico de barras — lucro por personalização
+        // Gráfico de pizza — lucro por personalização
         Label lblGraficoPersonalizacao = new Label("📊 Lucro por Personalização");
         lblGraficoPersonalizacao.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        CategoryAxis xAxisLucro = new CategoryAxis();
-        xAxisLucro.setTickLabelRotation(0);
-        NumberAxis yAxisLucro = new NumberAxis();
-        yAxisLucro.setLabel("R$");
-
-        BarChart<String, Number> graficoPersonalizacao = new BarChart<>(xAxisLucro, yAxisLucro);
+        PieChart graficoPersonalizacao = new PieChart();
         graficoPersonalizacao.setPrefSize(500, 320);
         graficoPersonalizacao.setMinSize(500, 320);
         graficoPersonalizacao.setMaxSize(500, 320);
-        graficoPersonalizacao.setLegendVisible(false);
+        graficoPersonalizacao.setLegendVisible(true);
+        graficoPersonalizacao.setLabelsVisible(true);
 
-        XYChart.Series<String, Number> serieLucro = new XYChart.Series<>();
-        adicionarBarraLucro(serieLucro, "Bordado", e.getLucroBordado());
-        adicionarBarraLucro(serieLucro, "DTF", e.getLucroDtf());
-        adicionarBarraLucro(serieLucro, "Sublimação", e.getLucroSublimacao());
-        adicionarBarraLucro(serieLucro, "Silkscreen", e.getLucroSilkscreen());
-        adicionarBarraLucro(serieLucro, "Brindes", e.getLucroBrindes());
-        graficoPersonalizacao.getData().add(serieLucro);
-        instalarTooltipsBarras(graficoPersonalizacao, true);
+        adicionarFatiaLucro(graficoPersonalizacao, "Bordado", e.getLucroBordado());
+        adicionarFatiaLucro(graficoPersonalizacao, "DTF", e.getLucroDtf());
+        adicionarFatiaLucro(graficoPersonalizacao, "Sublimação", e.getLucroSublimacao());
+        adicionarFatiaLucro(graficoPersonalizacao, "Silkscreen", e.getLucroSilkscreen());
+        adicionarFatiaLucro(graficoPersonalizacao, "Brindes", e.getLucroBrindes());
+        instalarTooltipsPizza(graficoPersonalizacao);
 
         VBox blocoPersonalizacao = new VBox(10, lblGraficoPersonalizacao, graficoPersonalizacao);
         blocoPersonalizacao.setPadding(new Insets(20));
@@ -392,8 +386,23 @@ public class EstatisticasView {
         }
     }
 
-    private void adicionarBarraLucro(XYChart.Series<String, Number> serie, String nome, BigDecimal valor) {
-        serie.getData().add(new XYChart.Data<>(nome, valor.doubleValue()));
+    private void adicionarFatiaLucro(PieChart grafico, String nome, BigDecimal valor) {
+        if (valor != null && valor.compareTo(BigDecimal.ZERO) > 0) {
+            grafico.getData().add(new PieChart.Data(nome, valor.doubleValue()));
+        }
+    }
+
+    private void instalarTooltipsPizza(PieChart grafico) {
+        double total = grafico.getData().stream().mapToDouble(PieChart.Data::getPieValue).sum();
+        javafx.application.Platform.runLater(() -> {
+            for (PieChart.Data fatia : grafico.getData()) {
+                if (fatia.getNode() != null) {
+                    double porcentagem = fatia.getPieValue() / total * 100;
+                    String texto = String.format("R$ %.2f (%.1f%%)", fatia.getPieValue(), porcentagem);
+                    Tooltip.install(fatia.getNode(), new Tooltip(texto));
+                }
+            }
+        });
     }
 
     private void instalarTooltipsBarras(BarChart<String, Number> chart, boolean valorEmReais) {
