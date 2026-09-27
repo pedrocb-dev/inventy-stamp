@@ -207,37 +207,6 @@ public class EstatisticasView {
 
         Separator sep1 = new Separator();
         Separator sep2 = new Separator();
-        Separator sep3 = new Separator();
-
-// Gráfico de origem das peças
-        Label lblGraficoOrigem = new Label("🧵 Origem das Peças");
-        lblGraficoOrigem.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-
-        CategoryAxis xAxisOrigem = new CategoryAxis();
-        NumberAxis yAxisOrigem = new NumberAxis();
-        yAxisOrigem.setLabel("Qtd. de pedidos");
-
-        BarChart<String, Number> graficoOrigem = new BarChart<>(xAxisOrigem, yAxisOrigem);
-        graficoOrigem.setPrefSize(500, 320);
-        graficoOrigem.setMinSize(500, 320);
-        graficoOrigem.setMaxSize(500, 320);
-        graficoOrigem.setLegendVisible(false);
-
-        XYChart.Series<String, Number> serieOrigem = new XYChart.Series<>();
-        serieOrigem.getData().add(new XYChart.Data<>("Nossas", e.getQtdPedidosPecasNossas()));
-        serieOrigem.getData().add(new XYChart.Data<>("Do Cliente", e.getQtdPedidosPecasCliente()));
-        serieOrigem.getData().add(new XYChart.Data<>("Ambos", e.getQtdPedidosPecasAmbos()));
-        graficoOrigem.getData().add(serieOrigem);
-        instalarTooltipsBarras(graficoOrigem, false);
-
-        VBox blocoOrigem = new VBox(10, lblGraficoOrigem, graficoOrigem);
-        blocoOrigem.setPadding(new Insets(20));
-        blocoOrigem.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(blocoOrigem, Priority.ALWAYS);
-        blocoOrigem.setStyle(
-                "-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
-                        "-fx-border-color: #dcdde1; -fx-border-radius: 10;"
-        );
 
         // Lucro bruto e líquido
         Label lblLucroBruto = new Label("💰 Lucro Bruto: R$ " +
@@ -277,8 +246,6 @@ public class EstatisticasView {
                 lblGraficoLinha, lineChart,
                 sep1,
                 linhaGraficos,
-                sep3,
-                blocoOrigem,
                 sep2,
                 rodape, listaGastos
         );
