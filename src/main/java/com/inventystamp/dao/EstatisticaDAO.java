@@ -27,17 +27,14 @@ public class EstatisticaDAO {
 
     public void salvarOuAtualizar(EstatisticasMes e) {
         String sql = "INSERT INTO estatisticas_mes (ano, mes, lucro_bruto, lucro_bordado, lucro_dtf, " +
-                "lucro_sublimacao, lucro_silkscreen, lucro_brindes, qtd_pedidos_pecas_nossas, qtd_pedidos_pecas_cliente, qtd_pedidos_pecas_ambos) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
+                "lucro_sublimacao, lucro_silkscreen, lucro_brindes) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
                 "lucro_bruto = lucro_bruto + VALUES(lucro_bruto), " +
                 "lucro_bordado = lucro_bordado + VALUES(lucro_bordado), " +
                 "lucro_dtf = lucro_dtf + VALUES(lucro_dtf), " +
                 "lucro_sublimacao = lucro_sublimacao + VALUES(lucro_sublimacao), " +
                 "lucro_silkscreen = lucro_silkscreen + VALUES(lucro_silkscreen), " +
-                "lucro_brindes = lucro_brindes + VALUES(lucro_brindes), " +
-                "qtd_pedidos_pecas_nossas = qtd_pedidos_pecas_nossas + VALUES(qtd_pedidos_pecas_nossas), " +
-                "qtd_pedidos_pecas_cliente = qtd_pedidos_pecas_cliente + VALUES(qtd_pedidos_pecas_cliente), " +
-                "qtd_pedidos_pecas_ambos = qtd_pedidos_pecas_ambos + VALUES(qtd_pedidos_pecas_ambos)";
+                "lucro_brindes = lucro_brindes + VALUES(lucro_brindes)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -49,9 +46,6 @@ public class EstatisticaDAO {
             ps.setBigDecimal(6, e.getLucroSublimacao());
             ps.setBigDecimal(7, e.getLucroSilkscreen());
             ps.setBigDecimal(8, e.getLucroBrindes());
-            ps.setInt(9, e.getQtdPedidosPecasNossas());
-            ps.setInt(10, e.getQtdPedidosPecasCliente());
-            ps.setInt(11, e.getQtdPedidosPecasAmbos());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -134,9 +128,6 @@ public class EstatisticaDAO {
         e.setLucroSublimacao(rs.getBigDecimal("lucro_sublimacao"));
         e.setLucroSilkscreen(rs.getBigDecimal("lucro_silkscreen"));
         e.setLucroBrindes(rs.getBigDecimal("lucro_brindes"));
-        e.setQtdPedidosPecasNossas(rs.getInt("qtd_pedidos_pecas_nossas"));
-        e.setQtdPedidosPecasCliente(rs.getInt("qtd_pedidos_pecas_cliente"));
-        e.setQtdPedidosPecasAmbos(rs.getInt("qtd_pedidos_pecas_ambos"));
         return e;
     }
 }

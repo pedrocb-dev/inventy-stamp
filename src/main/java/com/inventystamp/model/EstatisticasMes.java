@@ -12,9 +12,6 @@ public class EstatisticasMes {
     private BigDecimal lucroSublimacao;
     private BigDecimal lucroSilkscreen;
     private BigDecimal lucroBrindes;
-    private int qtdPedidosPecasNossas;
-    private int qtdPedidosPecasCliente;
-    private int qtdPedidosPecasAmbos;
 
     public EstatisticasMes() {}
 
@@ -44,13 +41,4 @@ public class EstatisticasMes {
 
     public BigDecimal getLucroBrindes() { return lucroBrindes != null ? lucroBrindes : BigDecimal.ZERO; }
     public void setLucroBrindes(BigDecimal lucroBrindes) { this.lucroBrindes = lucroBrindes; }
-
-    public int getQtdPedidosPecasNossas() { return qtdPedidosPecasNossas; }
-    public void setQtdPedidosPecasNossas(int qtdPedidosPecasNossas) { this.qtdPedidosPecasNossas = qtdPedidosPecasNossas; }
-
-    public int getQtdPedidosPecasCliente() { return qtdPedidosPecasCliente; }
-    public void setQtdPedidosPecasCliente(int qtdPedidosPecasCliente) { this.qtdPedidosPecasCliente = qtdPedidosPecasCliente; }
-
-    public int getQtdPedidosPecasAmbos() { return qtdPedidosPecasAmbos; }
-    public void setQtdPedidosPecasAmbos(int qtdPedidosPecasAmbos) { this.qtdPedidosPecasAmbos = qtdPedidosPecasAmbos; }
 }
