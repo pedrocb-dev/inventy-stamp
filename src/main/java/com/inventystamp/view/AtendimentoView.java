@@ -1,6 +1,5 @@
 package com.inventystamp.view;
 
-import com.inventystamp.dao.PedidoDAO;
 import com.inventystamp.dao.RascunhoDAO;
 import com.inventystamp.model.*;
 import javafx.geometry.Insets;
@@ -10,9 +9,6 @@ import javafx.scene.layout.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.math.BigDecimal;
-import com.inventystamp.dao.DemandaPedidoDAO;
-import com.inventystamp.model.DemandaPedido;
 import com.inventystamp.controller.PedidoController;
 
 public class AtendimentoView {
@@ -174,7 +170,7 @@ public class AtendimentoView {
         telefoneComBotao.setAlignment(Pos.TOP_LEFT);
 
         HBox linha1 = new HBox(12,
-                criarCampo("👤 Cliente *", tfNome),
+                criarCampo("👤 Cliente", tfNome),
                 criarCampoFixo("📞 Telefone", telefoneComBotao, 200)
         );
 
@@ -199,8 +195,8 @@ public class AtendimentoView {
         cbPagamento.setStyle("-fx-font-size: 14px;");
 
         HBox linha2 = new HBox(12,
-                criarCampo("🎨 Personalização *", cbTipo),
-                criarCampo("💳 Pagamento *", cbPagamento)
+                criarCampo("🎨 Personalização", cbTipo),
+                criarCampo("💳 Pagamento", cbPagamento)
         );
 
         dpConfirmacao = new DatePicker(LocalDate.now());
@@ -212,8 +208,8 @@ public class AtendimentoView {
         dpEntrega.setStyle("-fx-font-size: 14px;");
 
         HBox linha3 = new HBox(12,
-                criarCampo("📅 Confirmação *", dpConfirmacao),
-                criarCampo("📅 Entrega *", dpEntrega)
+                criarCampo("📅 Confirmação", dpConfirmacao),
+                criarCampo("📅 Entrega", dpEntrega)
         );
 
         tfValor = criarTextField("Ex: 65.00", 120);
@@ -399,6 +395,69 @@ public class AtendimentoView {
         botaoBox.setAlignment(Pos.CENTER_LEFT);
 
         btnSalvar.setOnAction(e -> {
+            boolean valido = true;
+
+            if (tfNome.getText() == null || tfNome.getText().isBlank()) {
+                tfNome.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #e74c3c; -fx-border-radius: 6; -fx-border-width: 2;");
+                valido = false;
+            } else {
+                tfNome.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
+            }
+
+            if (cbTipo.getValue() == null) {
+                cbTipo.setStyle("-fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 4;");
+                valido = false;
+            } else {
+                cbTipo.setStyle("-fx-font-size: 14px;");
+            }
+
+            if (cbPagamento.getValue() == null) {
+                cbPagamento.setStyle("-fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 4;");
+                valido = false;
+            } else {
+                cbPagamento.setStyle("-fx-font-size: 14px;");
+            }
+
+            if (dpConfirmacao.getValue() == null) {
+                dpConfirmacao.setStyle("-fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 4;");
+                valido = false;
+            } else {
+                dpConfirmacao.setStyle("-fx-font-size: 14px;");
+            }
+
+            if (dpEntrega.getValue() == null) {
+                dpEntrega.setStyle("-fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 4;");
+                valido = false;
+            } else {
+                dpEntrega.setStyle("-fx-font-size: 14px;");
+            }
+
+            if (taAnotacao.getText() == null || taAnotacao.getText().isBlank()) {
+                taAnotacao.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #e74c3c; -fx-border-radius: 6; -fx-border-width: 2;");
+                valido = false;
+            } else {
+                taAnotacao.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
+            }
+
+            if (!tbACombinar.isSelected() && (tfValor.getText() == null || tfValor.getText().isBlank())) {
+                tfValor.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #e74c3c; -fx-border-radius: 6; -fx-border-width: 2;");
+                valido = false;
+            } else {
+                tfValor.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
+            }
+
+            if (!tbACombinar.isSelected() && (tfValor.getText() == null || tfValor.getText().isBlank())) {
+                tfValor.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #e74c3c; -fx-border-radius: 6; -fx-border-width: 2;");
+                valido = false;
+            } else {
+                tfValor.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
+            }
+
+            if (!valido) {
+                lblFeedback.setText("⚠ Preencha os campos obrigatórios destacados em vermelho.");
+                lblFeedback.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px;");
+                return;
+            }
             String destinatarioDemanda = tbMarco.isSelected() ? "MARCO" : tbSimone.isSelected() ? "SIMONE" : null;
 
             PedidoController.ResultadoSalvar resultado = pedidoController.salvarPedido(
@@ -598,6 +657,14 @@ public class AtendimentoView {
         taDemanda.clear();
         tbMarco.setSelected(false);
         tbSimone.setSelected(false);
+        tfNome.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
+        cbTipo.setStyle("-fx-font-size: 14px;");
+        cbPagamento.setStyle("-fx-font-size: 14px;");
+        dpConfirmacao.setStyle("-fx-font-size: 14px;");
+        dpEntrega.setStyle("-fx-font-size: 14px;");
+        taAnotacao.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
+        tfValor.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
+
     }
 
     private VBox criarCampo(String labelTexto, javafx.scene.Node campo) {
