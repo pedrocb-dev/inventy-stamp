@@ -118,28 +118,30 @@ public class AtendimentoView {
             }
         });
 
-        Button btnCopiarTelefone = new Button("💬");
-        btnCopiarTelefone.setTooltip(new Tooltip("Abrir WhatsApp"));
-        btnCopiarTelefone.setPrefSize(38, 38);
-        btnCopiarTelefone.setStyle(
-                "-fx-background-color: #25D366; -fx-text-fill: white; " +
-                        "-fx-background-radius: 8; -fx-font-size: 15px;"
+        javafx.scene.image.ImageView btnCopiarTelefone = new javafx.scene.image.ImageView(
+                new javafx.scene.image.Image(getClass().getResourceAsStream("/images/whatsapp.png"))
         );
-        btnCopiarTelefone.setOnMouseEntered(e -> btnCopiarTelefone.setStyle(
-                "-fx-background-color: #1ebe57; -fx-text-fill: white; " +
-                        "-fx-background-radius: 8; -fx-font-size: 15px;"
-        ));
-        btnCopiarTelefone.setOnMouseExited(e -> btnCopiarTelefone.setStyle(
-                "-fx-background-color: #25D366; -fx-text-fill: white; " +
-                        "-fx-background-radius: 8; -fx-font-size: 15px;"
-        ));
+        btnCopiarTelefone.setFitWidth(32);
+        btnCopiarTelefone.setFitHeight(32);
+        btnCopiarTelefone.setPreserveRatio(true);
+        btnCopiarTelefone.setStyle("-fx-cursor: hand;");
+        Tooltip.install(btnCopiarTelefone, new Tooltip("Abrir WhatsApp"));
+
+        javafx.animation.ScaleTransition escalarCimaTelefone = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(150), btnCopiarTelefone);
+        escalarCimaTelefone.setToX(1.15);
+        escalarCimaTelefone.setToY(1.15);
+        javafx.animation.ScaleTransition escalarBaixoTelefone = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(150), btnCopiarTelefone);
+        escalarBaixoTelefone.setToX(1.0);
+        escalarBaixoTelefone.setToY(1.0);
+        btnCopiarTelefone.setOnMouseEntered(e -> { escalarBaixoTelefone.stop(); escalarCimaTelefone.playFromStart(); });
+        btnCopiarTelefone.setOnMouseExited(e -> { escalarCimaTelefone.stop(); escalarBaixoTelefone.playFromStart(); });
         Label lblCopiado = new Label("Abrindo...");
         lblCopiado.setStyle("-fx-font-size: 10px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
         lblCopiado.setVisible(false);
         lblCopiado.setMinWidth(60);
         lblCopiado.setAlignment(Pos.CENTER);
 
-        btnCopiarTelefone.setOnAction(e -> {
+        btnCopiarTelefone.setOnMouseClicked(e -> {
             if (!tfTelefone.getText().isBlank()) {
                 try {
                     String numeros = tfTelefone.getText().replaceAll("[^0-9]", "");

@@ -393,13 +393,26 @@ public class PedidosView {
         btnCupomFiscal.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
         btnCupomFiscal.setOnAction(e -> gerarECopiarCupomFiscal(p));
 
-        Button btnWhatsApp = new Button("💬");
-        btnWhatsApp.setTooltip(new Tooltip("Abrir WhatsApp do cliente"));
-        btnWhatsApp.setPrefSize(38, 38);
-        btnWhatsApp.setStyle("-fx-background-color: #25D366; -fx-text-fill: white; -fx-background-radius: 8; -fx-font-size: 15px;");
-        btnWhatsApp.setOnAction(e -> abrirWhatsAppCliente(p));
+        javafx.scene.image.ImageView btnWhatsApp = new javafx.scene.image.ImageView(
+                new javafx.scene.image.Image(getClass().getResourceAsStream("/images/whatsapp.png"))
+        );
+        btnWhatsApp.setFitWidth(32);
+        btnWhatsApp.setFitHeight(32);
+        btnWhatsApp.setPreserveRatio(true);
+        btnWhatsApp.setStyle("-fx-cursor: hand;");
+        Tooltip.install(btnWhatsApp, new Tooltip("Abrir WhatsApp do cliente"));
+        btnWhatsApp.setOnMouseClicked(e -> abrirWhatsAppCliente(p));
 
-        for (Button b : new Button[]{btnConcluir, btnEditar, btnRemover, btnImprimir, btnCupomFiscal, btnWhatsApp}) {
+        javafx.animation.ScaleTransition escalarCimaWpp = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(150), btnWhatsApp);
+        escalarCimaWpp.setToX(1.15);
+        escalarCimaWpp.setToY(1.15);
+        javafx.animation.ScaleTransition escalarBaixoWpp = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(150), btnWhatsApp);
+        escalarBaixoWpp.setToX(1.0);
+        escalarBaixoWpp.setToY(1.0);
+        btnWhatsApp.setOnMouseEntered(e -> { escalarBaixoWpp.stop(); escalarCimaWpp.playFromStart(); });
+        btnWhatsApp.setOnMouseExited(e -> { escalarCimaWpp.stop(); escalarBaixoWpp.playFromStart(); });
+
+        for (Button b : new Button[]{btnConcluir, btnEditar, btnRemover, btnImprimir, btnCupomFiscal}) {
             aplicarEfeitoHover(b);
         }
 
