@@ -75,9 +75,10 @@ public class MainApp extends Application {
     }
 
     public static void mostrarTela(Stage stage, String tela) {
-        VBox menu = new VBox(8);
-        menu.setPadding(new Insets(20, 10, 20, 10));
-        menu.setPrefWidth(180);
+        VBox menu = new VBox(24);
+        menu.setPadding(new Insets(30, 10, 20, 10));
+        menu.setPrefWidth(170);
+        menu.setAlignment(Pos.TOP_CENTER);
         menu.setStyle("-fx-background-color: #2c3e50;");
 
         StackPane conteudo = new StackPane();
@@ -100,12 +101,12 @@ public class MainApp extends Application {
         };
 
         menu.getChildren().addAll(
-                criarBotaoMenu("🎧 Atender", abrirAtendimento),
-                criarBotaoMenu("📋 Ver Pedidos", () -> {
+                criarBotaoMenu("🎧", "Atender", abrirAtendimento),
+                criarBotaoMenu("📋", "Ver Pedidos", () -> {
                     sairDoAtendimentoSeNecessario.run();
                     conteudo.getChildren().setAll(new PedidosView().getView());
                 }),
-                criarBotaoMenu("📊 Estatísticas", () -> {
+                criarBotaoMenu("📊", "Estatísticas", () -> {
                     sairDoAtendimentoSeNecessario.run();
                     TextInputDialog dialog = new TextInputDialog();
                     dialog.setTitle("Acesso Restrito");
@@ -179,22 +180,39 @@ public class MainApp extends Application {
         return btn;
     }
 
-    private static Button criarBotaoMenu(String texto, Runnable acao) {
-        Button btn = new Button(texto);
-        btn.setPrefWidth(160);
-        btn.setPrefHeight(38);
-        btn.setStyle(
-                "-fx-background-color: #34495e; -fx-text-fill: white; " +
-                        "-fx-background-radius: 6; -fx-font-size: 12px;"
-        );
-        btn.setOnMouseEntered(e -> btn.setStyle(
-                "-fx-background-color: #2980b9; -fx-text-fill: white; " +
-                        "-fx-background-radius: 6; -fx-font-size: 12px;"
-        ));
-        btn.setOnMouseExited(e -> btn.setStyle(
-                "-fx-background-color: #34495e; -fx-text-fill: white; " +
-                        "-fx-background-radius: 6; -fx-font-size: 12px;"
-        ));
+    private static Button criarBotaoMenu(String emoji, String texto, Runnable acao) {
+        Label lblIcone = new Label(emoji);
+        lblIcone.setStyle("-fx-font-size: 32px; -fx-text-fill: white;");
+
+        Label lblTexto = new Label(texto);
+        lblTexto.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: white;");
+
+        VBox conteudoBotao = new VBox(6, lblIcone, lblTexto);
+        conteudoBotao.setAlignment(Pos.CENTER);
+
+        Button btn = new Button();
+        btn.setGraphic(conteudoBotao);
+        btn.setPrefSize(130, 110);
+        btn.setStyle("-fx-background-color: #34495e; -fx-background-radius: 12;");
+
+        javafx.animation.ScaleTransition escalarCima = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(150), btn);
+        escalarCima.setToX(1.08);
+        escalarCima.setToY(1.08);
+        javafx.animation.ScaleTransition escalarBaixo = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(150), btn);
+        escalarBaixo.setToX(1.0);
+        escalarBaixo.setToY(1.0);
+
+        btn.setOnMouseEntered(e -> {
+            escalarBaixo.stop();
+            escalarCima.playFromStart();
+            btn.setStyle("-fx-background-color: #2980b9; -fx-background-radius: 12;");
+        });
+        btn.setOnMouseExited(e -> {
+            escalarCima.stop();
+            escalarBaixo.playFromStart();
+            btn.setStyle("-fx-background-color: #34495e; -fx-background-radius: 12;");
+        });
+
         btn.setOnAction(e -> acao.run());
         return btn;
     }
