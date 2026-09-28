@@ -1,6 +1,6 @@
 package com.inventystamp.view;
 
-import com.inventystamp.dao.EstatisticaDAO;
+import com.inventystamp.controller.EstatisticaController;
 import com.inventystamp.model.EstatisticasMes;
 import com.inventystamp.model.Gasto;
 import javafx.geometry.Insets;
@@ -15,11 +15,10 @@ import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
-import com.inventystamp.dao.PecasPedidoDAO;
 
 public class EstatisticasView {
 
-    private final EstatisticaDAO dao = new EstatisticaDAO();
+    private final EstatisticaController estatisticaController = new EstatisticaController();
     private VBox root;
     private List<EstatisticasMes> estatisticas;
     private int indiceAtual = 0;
@@ -37,7 +36,7 @@ public class EstatisticasView {
         Label titulo = new Label("📊 Estatísticas");
         titulo.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        estatisticas = dao.listarTodos();
+        estatisticas = estatisticaController.listarEstatisticas();
 
         if (estatisticas.isEmpty()) {
             Label vazio = new Label("Nenhuma estatística disponível ainda.\nConclua um pedido para começar.");
@@ -171,8 +170,7 @@ public class EstatisticasView {
         graficoPecas.setMaxSize(500, 320);
         graficoPecas.setLegendVisible(false);
 
-        PecasPedidoDAO pecasDAO = new PecasPedidoDAO();
-        List<Integer> pecasDoMes = pecasDAO.listarPorMes(e.getAno(), e.getMes());
+        List<Integer> pecasDoMes = estatisticaController.listarPecasDoMes(e.getAno(), e.getMes());
 
         int[] faixas = new int[6]; // 1-10, 11-20, 21-30, 31-40, 41-50, 51+
         for (int qtd : pecasDoMes) {
@@ -213,11 +211,9 @@ public class EstatisticasView {
                 e.getLucroBruto().setScale(2, RoundingMode.HALF_UP));
         lblLucroBruto.setStyle("-fx-font-size: 15px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
 
-        List<Gasto> gastos = dao.listarGastos(e.getId());
-        BigDecimal totalGastos = gastos.stream()
-                .map(Gasto::getValor)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal lucroLiquido = e.getLucroBruto().subtract(totalGastos);
+        List<Gasto> gastos = estatisticaController.listarGastos(e.getId());
+        BigDecimal totalGastos = estatisticaController.calcularTotalGastos(gastos);
+        BigDecimal lucroLiquido = estatisticaController.calcularLucroLiquido(e.getLucroBruto(), totalGastos);
 
         Label lblLucroLiquido = new Label("💵 Lucro Líquido: R$ " +
                 lucroLiquido.setScale(2, RoundingMode.HALF_UP));
@@ -252,7 +248,7 @@ public class EstatisticasView {
     }
 
     private void abrirDialogGasto(EstatisticasMes e, Label lblLucroLiquido, Label lblTotalGastos, List<Gasto> gastos) {
-        Dialog<Gasto> dialog = new Dialog<>();
+        Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Adicionar Gasto");
 
         TextField tfCategoria = new TextField();
@@ -272,29 +268,18 @@ public class EstatisticasView {
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        dialog.setResultConverter(btn -> {
-            if (btn == ButtonType.OK && !tfCategoria.getText().isBlank() && !tfValor.getText().isBlank()) {
-                Gasto g = new Gasto();
-                g.setEstatisticaId(e.getId());
-                g.setCategoria(tfCategoria.getText().trim());
-                try {
-                    g.setValor(new BigDecimal(tfValor.getText().replace(",", ".")));
-                } catch (Exception ex) {
-                    return null;
-                }
-                return g;
-            }
-            return null;
-        });
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn != ButtonType.OK) return;
 
-        dialog.showAndWait().ifPresent(g -> {
-            dao.adicionarGasto(g);
-            gastos.add(g);
+            String resultado = estatisticaController.adicionarGasto(e.getId(), tfCategoria.getText(), tfValor.getText());
+            if (resultado == null) return;
 
-            BigDecimal totalGastosAtualizado = gastos.stream()
-                    .map(Gasto::getValor)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal lucroLiquido = e.getLucroBruto().subtract(totalGastosAtualizado);
+            List<Gasto> gastosAtualizados = estatisticaController.listarGastos(e.getId());
+            gastos.clear();
+            gastos.addAll(gastosAtualizados);
+
+            BigDecimal totalGastosAtualizado = estatisticaController.calcularTotalGastos(gastos);
+            BigDecimal lucroLiquido = estatisticaController.calcularLucroLiquido(e.getLucroBruto(), totalGastosAtualizado);
             lblLucroLiquido.setText("💵 Lucro Líquido: R$ " + lucroLiquido.setScale(2, RoundingMode.HALF_UP));
             lblTotalGastos.setText("💸 Total de Gastos: R$ " + totalGastosAtualizado.setScale(2, RoundingMode.HALF_UP));
 
@@ -335,13 +320,11 @@ public class EstatisticasView {
                             "-fx-background-radius: 4; -fx-font-size: 11px;"
             );
             btnRemover.setOnAction(ev -> {
-                dao.deletarGasto(g.getId());
+                estatisticaController.removerGasto(g.getId());
                 gastos.remove(g);
 
-                BigDecimal totalGastosAtualizado = gastos.stream()
-                        .map(Gasto::getValor)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal lucroLiquido = e.getLucroBruto().subtract(totalGastosAtualizado);
+                BigDecimal totalGastosAtualizado = estatisticaController.calcularTotalGastos(gastos);
+                BigDecimal lucroLiquido = estatisticaController.calcularLucroLiquido(e.getLucroBruto(), totalGastosAtualizado);
                 lblLucroLiquido.setText("💵 Lucro Líquido: R$ " + lucroLiquido.setScale(2, RoundingMode.HALF_UP));
                 lblTotalGastos.setText("💸 Total de Gastos: R$ " + totalGastosAtualizado.setScale(2, RoundingMode.HALF_UP));
 
