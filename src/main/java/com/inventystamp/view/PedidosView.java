@@ -594,10 +594,16 @@ public class PedidosView {
                 } else {
                     p.setValor(null);
                 }
-                try {
-                    if (!tfResta.getText().isBlank())
-                        p.setResta(new java.math.BigDecimal(tfResta.getText()));
-                } catch (Exception ex) {}
+                if (cbPagamento.getValue() == StatusPagamento.PARCIAL) {
+                    try {
+                        if (!tfResta.getText().isBlank())
+                            p.setResta(new java.math.BigDecimal(tfResta.getText()));
+                        else
+                            p.setResta(null);
+                    } catch (Exception ex) {}
+                } else {
+                    p.setResta(null);
+                }
                 p.setPrecisaNf(cbNF.getValue().equals("Precisa de NF"));
                 p.setPrecisaCupomFiscal(cbCupomFiscal.getValue().equals("Precisa de cupom fiscal"));
                 p.setAtendente(cbAtendenteEdicao.getValue());

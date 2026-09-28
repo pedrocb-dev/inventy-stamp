@@ -171,7 +171,7 @@ public class AtendimentoView {
         botaoComLegenda.setAlignment(Pos.CENTER);
 
         HBox telefoneComBotao = new HBox(6, tfTelefone, botaoComLegenda);
-        telefoneComBotao.setAlignment(Pos.CENTER_LEFT);
+        telefoneComBotao.setAlignment(Pos.TOP_LEFT);
 
         HBox linha1 = new HBox(12,
                 criarCampo("👤 Cliente *", tfNome),
@@ -179,15 +179,6 @@ public class AtendimentoView {
         );
 
         taAnotacao = new TextArea();
-        taAnotacao.setPromptText(
-                "Anotações livres...\n\n" +
-                        "Sugestões:\n" +
-                        "• O cliente trouxe a peça?\n" +
-                        "• A peça é da empresa? (tamanho, cor)\n" +
-                        "• Quantidade de peças\n" +
-                        "• Posição da personalização\n" +
-                        "• Tamanho da estampa"
-        );
         taAnotacao.setPrefRowCount(5);
         taAnotacao.setStyle(
                 "-fx-font-size: 14px; -fx-background-radius: 6; " +
