@@ -376,10 +376,7 @@ public class PedidosView {
         lblAnotacao.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
         lblAnotacao.setWrapText(true);
 
-        HBox acoes = new HBox(8);
-        acoes.setAlignment(Pos.CENTER_RIGHT);
-
-        Button btnConcluir = new Button("✅ Concluir");
+        Button btnConcluir = new Button("📦 Pedido Entregue");
         btnConcluir.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
 
         Button btnEditar = new Button("✏ Editar");
@@ -398,10 +395,18 @@ public class PedidosView {
 
         Button btnWhatsApp = new Button("💬");
         btnWhatsApp.setTooltip(new Tooltip("Abrir WhatsApp do cliente"));
-        btnWhatsApp.setStyle("-fx-background-color: #25D366; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13px;");
+        btnWhatsApp.setPrefSize(38, 38);
+        btnWhatsApp.setStyle("-fx-background-color: #25D366; -fx-text-fill: white; -fx-background-radius: 8; -fx-font-size: 15px;");
         btnWhatsApp.setOnAction(e -> abrirWhatsAppCliente(p));
 
-        acoes.getChildren().addAll(btnWhatsApp, btnCupomFiscal, btnImprimir, btnConcluir, btnEditar, btnRemover);
+        for (Button b : new Button[]{btnConcluir, btnEditar, btnRemover, btnImprimir, btnCupomFiscal, btnWhatsApp}) {
+            aplicarEfeitoHover(b);
+        }
+
+        for (Button b : new Button[]{btnConcluir, btnEditar, btnRemover, btnImprimir, btnCupomFiscal}) {
+            b.setPrefWidth(130);
+            b.setPrefHeight(40);
+        }
 
         btnConcluir.setOnAction(e -> {
             String erroValor = pedidoController.validarConclusao(p);
@@ -467,27 +472,38 @@ public class PedidosView {
         linhaNome.setAlignment(Pos.CENTER_LEFT);
 
         VBox colunaEsquerda = new VBox(10, linhaNome, lblTipo, lblTelefone, lblEntrega, infoValor, lblPagamento, lblNF, lblCupomFiscal, lblAtendente);
-        colunaEsquerda.setPrefWidth(200);
+        colunaEsquerda.setPrefWidth(140);
+        colunaEsquerda.setMinWidth(0);
         HBox.setHgrow(colunaEsquerda, Priority.ALWAYS);
 
-        VBox colunaDireita = new VBox(6);
-        colunaDireita.setPrefWidth(180);
-        colunaDireita.setMinWidth(180);
-
         Label lblTituloAnotacao = new Label("📝 Anotações");
-        lblTituloAnotacao.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;");
+        lblTituloAnotacao.setAlignment(Pos.CENTER);
+        lblTituloAnotacao.setMinWidth(140);
+        lblTituloAnotacao.setStyle(
+                "-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2c3e50; " +
+                        "-fx-background-color: #d5dbdb; -fx-background-radius: 6; -fx-padding: 4 12 4 12;"
+        );
+        lblAnotacao.setMaxWidth(200);
 
-        lblAnotacao.setMaxWidth(180);
+        VBox colunaMeio = new VBox(6, lblTituloAnotacao, lblAnotacao);
+        colunaMeio.setAlignment(Pos.TOP_CENTER);
+        colunaMeio.setPrefWidth(240);
+        colunaMeio.setMinWidth(0);
+        HBox.setHgrow(colunaMeio, Priority.ALWAYS);
 
-        colunaDireita.getChildren().addAll(lblTituloAnotacao, lblAnotacao);
+        VBox colunaDireita = new VBox(16, btnConcluir, btnEditar, btnRemover, btnImprimir, btnCupomFiscal, btnWhatsApp);
+        colunaDireita.setAlignment(Pos.TOP_CENTER);
+        colunaDireita.setPrefWidth(160);
+        colunaDireita.setMinWidth(0);
+        HBox.setHgrow(colunaDireita, Priority.ALWAYS);
 
-        HBox conteudo = new HBox(14, colunaEsquerda, colunaDireita);
+        HBox conteudo = new HBox(20, colunaEsquerda, colunaMeio, colunaDireita);
         conteudo.setAlignment(Pos.TOP_LEFT);
 
         VBox topo = new VBox(10, barra, conteudo);
         VBox.setVgrow(topo, Priority.ALWAYS);
 
-        card.getChildren().addAll(topo, acoes);
+        card.getChildren().addAll(topo);
         return card;
     }
 
@@ -973,6 +989,27 @@ public class PedidosView {
                     "-fx-background-radius: 20; -fx-font-size: 12px; -fx-font-weight: bold; " +
                     "-fx-padding: 5 14 5 14; -fx-cursor: hand;";
         }
+    }
+
+    private void aplicarEfeitoHover(Button btn) {
+        javafx.animation.ScaleTransition scaleUp = new javafx.animation.ScaleTransition(Duration.millis(150), btn);
+        scaleUp.setToX(1.08);
+        scaleUp.setToY(1.08);
+
+        javafx.animation.ScaleTransition scaleDown = new javafx.animation.ScaleTransition(Duration.millis(150), btn);
+        scaleDown.setToX(1.0);
+        scaleDown.setToY(1.0);
+
+        btn.setOnMouseEntered(e -> {
+            scaleDown.stop();
+            scaleUp.playFromStart();
+            btn.setEffect(new javafx.scene.effect.DropShadow(12, javafx.scene.paint.Color.web("#000000", 0.35)));
+        });
+        btn.setOnMouseExited(e -> {
+            scaleUp.stop();
+            scaleDown.playFromStart();
+            btn.setEffect(null);
+        });
     }
 
     private void imprimirEtiqueta(Pedido p) {
