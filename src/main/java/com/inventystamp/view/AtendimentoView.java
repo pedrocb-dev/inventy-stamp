@@ -74,12 +74,13 @@ public class AtendimentoView {
         avisoBox.setVisible(false);
         avisoBox.setManaged(false);
         avisoBox.setPadding(new Insets(4, 10, 4, 10));
+        avisoBox.setMaxWidth(Double.MAX_VALUE);
         avisoBox.setStyle(
                 "-fx-background-color: #fef5e7; -fx-background-radius: 6; " +
                         "-fx-border-color: #e67e22; -fx-border-radius: 6; -fx-border-width: 1;"
         );
 
-        HBox cabecalhoTitulo = new HBox(16, titulo, avisoBox);
+        HBox cabecalhoTitulo = new HBox(16, titulo);
         cabecalhoTitulo.setAlignment(Pos.CENTER_LEFT);
 
         HBox container = new HBox(20);
@@ -322,41 +323,23 @@ public class AtendimentoView {
             lblFeedback.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 14px;");
         });
 
-        VBox sugestoesCard = new VBox(12);
-        sugestoesCard.setPadding(new Insets(24));
-        sugestoesCard.setPrefWidth(280);
-        sugestoesCard.setMinWidth(280);
-        sugestoesCard.setMaxWidth(280);
-        sugestoesCard.setAlignment(Pos.TOP_LEFT);
-        sugestoesCard.setStyle(
+        VBox rascunhosCard = new VBox(12);
+        rascunhosCard.setPadding(new Insets(24));
+        rascunhosCard.setPrefWidth(340);
+        rascunhosCard.setMinWidth(340);
+        rascunhosCard.setMaxWidth(340);
+        rascunhosCard.setAlignment(Pos.TOP_LEFT);
+        rascunhosCard.setStyle(
                 "-fx-background-color: white; -fx-background-radius: 10; " +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);"
         );
 
-        Label lblSugestoesTitulo = new Label("💡 Sugestões de anotação");
-        lblSugestoesTitulo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        Label lblRascunhosTitulo = new Label("📝 Rascunhos salvos");
+        lblRascunhosTitulo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        Label lblSugestao1 = new Label("Tamanho, cor e quantidade de peças.");
-        lblSugestao1.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-        lblSugestao1.setWrapText(true);
+        listaRascunhos = new VBox(8);
 
-        Label lblSugestao2 = new Label("Tamanho de estampa A4 ou A3.");
-        lblSugestao2.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-        lblSugestao2.setWrapText(true);
-
-        Label lblSugestao3 = new Label("Pedir peças pra Simone ou pro Marco.");
-        lblSugestao3.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-        lblSugestao3.setWrapText(true);
-
-        Label lblSugestao4 = new Label("Tamanhos: Pequeno até 10, Médio até 30, Grande até 50, Bem grande mais de 50.");
-        lblSugestao4.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-        lblSugestao4.setWrapText(true);
-
-        Label lblSugestao5 = new Label("Mostrar ao cliente a diferença entre estampa e bordado.");
-        lblSugestao5.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-        lblSugestao5.setWrapText(true);
-
-        sugestoesCard.getChildren().addAll(lblSugestoesTitulo, lblSugestao1, lblSugestao2, lblSugestao3, lblSugestao4, lblSugestao5);
+        rascunhosCard.getChildren().addAll(avisoBox, lblRascunhosTitulo, listaRascunhos);
 
 // Container de demanda
         VBox demandaCard = new VBox(12);
@@ -448,13 +431,6 @@ public class AtendimentoView {
                 tfValor.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
             }
 
-            if (!tbACombinar.isSelected() && (tfValor.getText() == null || tfValor.getText().isBlank())) {
-                tfValor.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #e74c3c; -fx-border-radius: 6; -fx-border-width: 2;");
-                valido = false;
-            } else {
-                tfValor.setStyle("-fx-font-size: 14px; -fx-background-radius: 6; -fx-border-color: #dcdde1; -fx-border-radius: 6;");
-            }
-
             if (!valido) {
                 lblFeedback.setText("⚠ Preencha os campos obrigatórios destacados em vermelho.");
                 lblFeedback.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 14px;");
@@ -491,7 +467,7 @@ public class AtendimentoView {
             lblFeedback.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 14px;");
         });
 
-        VBox colunaLateral = new VBox(20, sugestoesCard, demandaCard);
+        VBox colunaLateral = new VBox(20, rascunhosCard, demandaCard);
         container.getChildren().addAll(formCard, colunaLateral);
 
         formCard.getChildren().addAll(linha1, campoAnotacao, linha2, linha3, linha4, linha5, linha6);
@@ -499,22 +475,7 @@ public class AtendimentoView {
         VBox bottomBox = new VBox(10, botaoBox, lblFeedback);
         bottomBox.setMaxWidth(620 + 280 + 20);
 
-        VBox rascunhosCard = new VBox(12);
-        rascunhosCard.setPadding(new Insets(20));
-        rascunhosCard.setMaxWidth(620 + 280 + 20);
-        rascunhosCard.setStyle(
-                "-fx-background-color: white; -fx-background-radius: 10; " +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);"
-        );
-
-        Label lblRascunhosTitulo = new Label("📝 Rascunhos salvos");
-        lblRascunhosTitulo.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
-
-        listaRascunhos = new VBox(8);
-
-        rascunhosCard.getChildren().addAll(lblRascunhosTitulo, listaRascunhos);
-
-        VBox tudo = new VBox(20, container, bottomBox, rascunhosCard);
+        VBox tudo = new VBox(20, container, bottomBox);
         tudo.setAlignment(Pos.TOP_CENTER);
 
         ScrollPane scroll = new ScrollPane(tudo);
