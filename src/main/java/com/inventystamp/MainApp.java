@@ -12,12 +12,27 @@ import com.inventystamp.view.PedidosView;
 import com.inventystamp.view.AtendimentoView;
 import com.inventystamp.view.EstatisticasView;
 import javafx.scene.control.*;
+import com.inventystamp.util.Configuracao;
 
 public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) {
+        if (!Configuracao.arquivoEncontrado()) {
+            Alert aviso = new Alert(Alert.AlertType.WARNING);
+            aviso.setTitle("Configuração não encontrada");
+            aviso.setHeaderText("Arquivo " + Configuracao.NOME_ARQUIVO + " não encontrado");
+            aviso.setContentText("Copie o arquivo config.exemplo.properties para " + Configuracao.NOME_ARQUIVO
+                    + " na pasta do aplicativo e preencha os dados de acesso ao banco de dados.");
+            aviso.showAndWait();
+        }
         mostrarTelaInicial(stage);
+    }
+
+    /** Compara a senha digitada com a definida em estatisticas.senha no config.properties. */
+    private static boolean senhaEstatisticasCorreta(String digitada) {
+        String senha = Configuracao.get("estatisticas.senha");
+        return senha != null && senha.equals(digitada);
     }
 
     public static void mostrarTelaInicial(Stage stage) {
@@ -48,7 +63,7 @@ public class MainApp extends Application {
 
             dialog.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(
                     javafx.event.ActionEvent.ACTION, ev -> {
-                        if (!pf.getText().equals("***REMOVIDO***")) {
+                        if (!senhaEstatisticasCorreta(pf.getText())) {
                             ev.consume();
                             pf.clear();
                             pf.setPromptText("Senha incorreta!");
@@ -120,7 +135,7 @@ public class MainApp extends Application {
 
                     dialog.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(
                             javafx.event.ActionEvent.ACTION, ev -> {
-                                if (!pf.getText().equals("***REMOVIDO***")) {
+                                if (!senhaEstatisticasCorreta(pf.getText())) {
                                     ev.consume();
                                     pf.clear();
                                     pf.setPromptText("Senha incorreta!");

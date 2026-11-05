@@ -37,3 +37,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+### Inventy Stamp ###
+# Configuração local com senhas e endereços (use config.exemplo.properties como modelo)
+config.properties
+# Arquivos gerados pelo build (o executável é publicado nas Releases do GitHub)
+dependency-reduced-pom.xml
+*.jar
