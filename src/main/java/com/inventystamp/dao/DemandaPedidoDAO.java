@@ -78,18 +78,6 @@ public class DemandaPedidoDAO {
         }
     }
 
-    public int contarTodas() {
-        String sql = "SELECT COUNT(*) FROM demandas_pedido";
-        try (Connection conn = ConexaoDB.getConexao();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
     private DemandaPedido mapear(ResultSet rs) throws SQLException {
         DemandaPedido d = new DemandaPedido();
         d.setId(rs.getInt("id"));

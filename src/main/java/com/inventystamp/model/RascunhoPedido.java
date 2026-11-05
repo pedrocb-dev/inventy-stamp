@@ -15,7 +15,6 @@ public class RascunhoPedido {
     private String resta;
     private boolean precisaNf;
     private String atendente;
-    private String tamanhoPedido;
     private String demandaTexto;
     private String demandaDestinatario;
     private boolean precisaCupomFiscal;
@@ -59,8 +58,6 @@ public class RascunhoPedido {
     public String getAtendente() { return atendente; }
     public void setAtendente(String atendente) { this.atendente = atendente; }
 
-    public String getTamanhoPedido() { return tamanhoPedido; }
-    public void setTamanhoPedido(String tamanhoPedido) { this.tamanhoPedido = tamanhoPedido; }
 
     public String getDemandaTexto() { return demandaTexto; }
     public void setDemandaTexto(String demandaTexto) { this.demandaTexto = demandaTexto; }

@@ -15,7 +15,6 @@ public class Pedido {
     private BigDecimal valor;
     private StatusPagamento statusPagamento;
     private SituacaoPedido situacao;
-    private String fotoConclusao;
     private java.math.BigDecimal resta;
     private LocalDateTime criadoEm;
     private boolean precisaNf;
@@ -56,8 +55,6 @@ public class Pedido {
     public SituacaoPedido getSituacao() { return situacao; }
     public void setSituacao(SituacaoPedido situacao) { this.situacao = situacao; }
 
-    public String getFotoConclusao() { return fotoConclusao; }
-    public void setFotoConclusao(String fotoConclusao) { this.fotoConclusao = fotoConclusao; }
 
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }

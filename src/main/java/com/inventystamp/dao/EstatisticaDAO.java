@@ -11,20 +11,6 @@ import java.util.List;
 
 public class EstatisticaDAO {
 
-    public EstatisticasMes buscarOuCriar(int ano, int mes) {
-        String sql = "SELECT * FROM estatisticas_mes WHERE ano = ? AND mes = ?";
-        try (Connection conn = ConexaoDB.getConexao();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, ano);
-            ps.setInt(2, mes);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return mapear(rs);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     public void salvarOuAtualizar(EstatisticasMes e) {
         String sql = "INSERT INTO estatisticas_mes (ano, mes, lucro_bruto, lucro_bordado, lucro_dtf, " +
                 "lucro_sublimacao, lucro_silkscreen, lucro_brindes) " +

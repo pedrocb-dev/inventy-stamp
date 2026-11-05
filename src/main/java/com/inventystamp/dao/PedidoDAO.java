@@ -64,7 +64,7 @@ public class PedidoDAO {
 
     public void atualizar(Pedido p) {
         String sql = "UPDATE pedidos SET cliente_nome=?, cliente_telefone=?, anotacao=?, tipo_personalizacao=?, " +
-                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, foto_conclusao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, precisa_cupomfiscal=?, valor_a_combinar=? WHERE id=?";
+                "data_confirmacao=?, data_entrega=?, valor=?, status_pagamento=?, situacao=?, resta=?, precisa_nf=?, dtf_montado=?, atendente=?, precisa_cupomfiscal=?, valor_a_combinar=? WHERE id=?";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -78,14 +78,13 @@ public class PedidoDAO {
             ps.setBigDecimal(7, p.getValor());
             ps.setString(8, p.getStatusPagamento().name());
             ps.setString(9, p.getSituacao().name());
-            ps.setString(10, p.getFotoConclusao());
-            ps.setBigDecimal(11, p.getResta());
-            ps.setBoolean(12, p.isPrecisaNf());
-            ps.setBoolean(13, p.isDtfMontado());
-            ps.setString(14, p.getAtendente());
-            ps.setBoolean(15, p.isPrecisaCupomFiscal());
-            ps.setBoolean(16, p.isValorACombinar());
-            ps.setInt(17, p.getId());
+            ps.setBigDecimal(10, p.getResta());
+            ps.setBoolean(11, p.isPrecisaNf());
+            ps.setBoolean(12, p.isDtfMontado());
+            ps.setString(13, p.getAtendente());
+            ps.setBoolean(14, p.isPrecisaCupomFiscal());
+            ps.setBoolean(15, p.isValorACombinar());
+            ps.setInt(16, p.getId());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -119,7 +118,6 @@ public class PedidoDAO {
         p.setValor(rs.getBigDecimal("valor"));
         p.setStatusPagamento(StatusPagamento.valueOf(rs.getString("status_pagamento")));
         p.setSituacao(SituacaoPedido.valueOf(rs.getString("situacao")));
-        p.setFotoConclusao(rs.getString("foto_conclusao"));
         p.setResta(rs.getBigDecimal("resta"));
         p.setPrecisaNf(rs.getBoolean("precisa_nf"));
         p.setDtfMontado(rs.getBoolean("dtf_montado"));

@@ -28,8 +28,8 @@ public class RascunhoDAO {
 
     public void salvar(RascunhoPedido r) {
         String sql = "INSERT INTO rascunhos_pedido (cliente_nome, cliente_telefone, anotacao, " +
-                "tipo_personalizacao, data_confirmacao, data_entrega, valor, status_pagamento, resta, precisa_nf, atendente, tamanho_pedido, demanda_texto, demanda_destinatario, precisa_cupomfiscal) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "tipo_personalizacao, data_confirmacao, data_entrega, valor, status_pagamento, resta, precisa_nf, atendente, demanda_texto, demanda_destinatario, precisa_cupomfiscal) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexaoDB.getConexao();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -45,10 +45,9 @@ public class RascunhoDAO {
             ps.setString(9, r.getResta());
             ps.setBoolean(10, r.isPrecisaNf());
             ps.setString(11, r.getAtendente());
-            ps.setString(12, r.getTamanhoPedido());
-            ps.setString(13, r.getDemandaTexto());
-            ps.setString(14, r.getDemandaDestinatario());
-            ps.setBoolean(15, r.isPrecisaCupomFiscal());
+            ps.setString(12, r.getDemandaTexto());
+            ps.setString(13, r.getDemandaDestinatario());
+            ps.setBoolean(14, r.isPrecisaCupomFiscal());
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) r.setId(rs.getInt(1));
